@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/no_select"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        android:src="@drawable/effect_no_select"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/effect_whiten"
+        android:background="@drawable/effect_btn_selected_bg"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/no_select"
+        app:layout_constraintRight_toRightOf="@id/no_select"
+        app:layout_constraintTop_toBottomOf="@id/no_select"
+        android:text="无"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_whiten"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        app:layout_constraintLeft_toRightOf="@id/no_select"
+        app:layout_constraintRight_toLeftOf="@id/effect_smooth"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/effect_btn_normal_bg"
+        android:src="@drawable/effect_whiten"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_whiten"
+        app:layout_constraintRight_toRightOf="@id/effect_whiten"
+        app:layout_constraintTop_toBottomOf="@id/effect_whiten"
+        android:text="美白"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_smooth"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        app:layout_constraintLeft_toRightOf="@id/effect_whiten"
+        app:layout_constraintRight_toLeftOf="@id/effect_sharp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/effect_btn_normal_bg"
+        android:src="@drawable/effect_smooth"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_smooth"
+        app:layout_constraintRight_toRightOf="@id/effect_smooth"
+        app:layout_constraintTop_toBottomOf="@id/effect_smooth"
+        android:text="磨皮"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_sharp"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        app:layout_constraintLeft_toRightOf="@id/effect_smooth"
+        app:layout_constraintRight_toLeftOf="@id/effect_big_eye"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/effect_btn_normal_bg"
+        android:src="@drawable/effect_sharp"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_sharp"
+        app:layout_constraintRight_toRightOf="@id/effect_sharp"
+        app:layout_constraintTop_toBottomOf="@id/effect_sharp"
+        android:text="瘦脸"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_big_eye"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        app:layout_constraintLeft_toRightOf="@id/effect_sharp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:background="@drawable/effect_btn_normal_bg"
+        android:src="@drawable/effect_big_eye"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_big_eye"
+        app:layout_constraintRight_toRightOf="@id/effect_big_eye"
+        app:layout_constraintTop_toBottomOf="@id/effect_big_eye"
+        android:text="大眼"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+    
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="EffectTabText" parent="TextAppearance.AppCompat.Button">
+        <item name="android:textSize">16sp</item>
+    </style>
+</resources>

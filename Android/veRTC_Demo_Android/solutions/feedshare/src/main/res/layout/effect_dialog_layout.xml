@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="200dp"
+    android:orientation="vertical">
+    
+    <SeekBar
+        android:id="@+id/effect_seekbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:maxHeight="5dp"
+        android:thumb="@drawable/effect_seekbar_thumb"
+        android:progressDrawable="@drawable/effect_seekbar_bg"
+        android:max="100"
+        android:visibility="gone"
+        android:background="@null"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="170dp"
+        android:layout_marginTop="15dp"
+        android:background="@drawable/dialog_feed_share_users_bg"
+        android:orientation="vertical"
+        android:layout_gravity="bottom">
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/effect_tab"
+            android:background="@color/transparent"
+            app:tabSelectedTextColor="@color/blue"
+            app:tabIndicatorColor="@color/blue"
+            app:tabTextColor="@color/white"
+            app:tabIndicatorFullWidth="false"
+            app:tabMode="scrollable"
+            app:tabTextAppearance="@style/EffectTabText"
+            android:layout_width="match_parent"
+            android:layout_height="25dp"
+            android:layout_marginTop="15dp"
+            android:layout_marginLeft="3dp"
+            />
+
+        <androidx.viewpager.widget.ViewPager
+            android:id="@+id/effect_vp"
+            android:layout_width="match_parent"
+            android:layout_marginTop="20dp"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+
+    </LinearLayout>
+
+
+</FrameLayout>

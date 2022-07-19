@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <ImageView
+        android:id="@+id/no_select"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="10dp"
+        android:src="@drawable/effect_no_select"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/effect_landiao"
+        android:background="@drawable/effect_btn_selected_bg"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/no_select"
+        app:layout_constraintRight_toRightOf="@id/no_select"
+        app:layout_constraintTop_toBottomOf="@id/no_select"
+        android:text="无"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_landiao"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="2dp"
+        app:layout_constraintLeft_toRightOf="@id/no_select"
+        app:layout_constraintRight_toLeftOf="@id/effect_lengyang"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/filter_landiao"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_landiao"
+        app:layout_constraintRight_toRightOf="@id/effect_landiao"
+        app:layout_constraintTop_toBottomOf="@id/effect_landiao"
+        android:text="滥调胶片"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_lengyang"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="2dp"
+        app:layout_constraintLeft_toRightOf="@id/effect_landiao"
+        app:layout_constraintRight_toLeftOf="@id/effect_lianai"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/filter_lengyang"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_lengyang"
+        app:layout_constraintRight_toRightOf="@id/effect_lengyang"
+        app:layout_constraintTop_toBottomOf="@id/effect_lengyang"
+        android:text="冷氧"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_lianai"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="2dp"
+        app:layout_constraintLeft_toRightOf="@id/effect_lengyang"
+        app:layout_constraintRight_toLeftOf="@id/effect_yese"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/filter_lianai"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_lianai"
+        app:layout_constraintRight_toRightOf="@id/effect_lianai"
+        app:layout_constraintTop_toBottomOf="@id/effect_lianai"
+        android:text="恋爱超甜"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+
+    <ImageView
+        android:id="@+id/effect_yese"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:padding="2dp"
+        app:layout_constraintLeft_toRightOf="@id/effect_lianai"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/filter_yese"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintLeft_toLeftOf="@id/effect_yese"
+        app:layout_constraintRight_toRightOf="@id/effect_yese"
+        app:layout_constraintTop_toBottomOf="@id/effect_yese"
+        android:text="夜色"
+        android:textSize="12sp"
+        android:textColor="#86909C"
+        android:layout_marginTop="5dp"/>
+    
+</androidx.constraintlayout.widget.ConstraintLayout>

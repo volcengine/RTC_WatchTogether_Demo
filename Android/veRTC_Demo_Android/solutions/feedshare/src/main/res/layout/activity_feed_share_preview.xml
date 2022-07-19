@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_fl"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:background="#000">
+
+    <ImageView
+        android:id="@+id/camera_status"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="170dp"
+        android:background="@drawable/btn_bg"
+        android:padding="30dp"
+        android:src="@drawable/camera_off_white" />
+
+    <FrameLayout
+        android:id="@+id/preview_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginLeft="54dp"
+        android:layout_marginRight="54dp"
+        android:layout_marginBottom="140dp"
+        android:background="@drawable/login_bg"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp">
+
+        <LinearLayout
+            android:id="@+id/room_id_ll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:orientation="vertical"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <EditText
+                android:id="@+id/room_id_et"
+                style="@style/EditTextLg"
+                android:layout_width="match_parent"
+                android:hint="@string/login_input_id_hint"
+                android:lines="1"
+                android:maxLines="1"
+                android:singleLine="true"
+                android:textColor="@color/gray_11"
+                android:textColorHint="#86909C" />
+
+            <View
+                style="@style/DividerLine"
+                android:layout_marginTop="10dp"
+                android:background="#86909C" />
+
+            <TextView
+                android:id="@+id/room_id_waring_tv"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="@string/login_input_feed_share_id_waring"
+                android:textColor="@color/waring_normal"
+                android:textSize="@dimen/txt_H3_14sp"
+                android:visibility="invisible" />
+
+        </LinearLayout>
+
+        <com.volcengine.vertcdemo.core.widget.PressedImageView
+            android:id="@+id/mic_switch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="32dp"
+            android:padding="12dp"
+            android:src="@drawable/mic_on"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/camera_switch"
+            app:layout_constraintTop_toBottomOf="@+id/room_id_ll" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="麦克风"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintLeft_toLeftOf="@id/mic_switch"
+            app:layout_constraintRight_toRightOf="@id/mic_switch"
+            app:layout_constraintTop_toBottomOf="@id/mic_switch" />
+
+        <com.volcengine.vertcdemo.core.widget.PressedImageView
+            android:id="@+id/camera_switch"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginBottom="40dp"
+            android:padding="12dp"
+            android:src="@drawable/camera_on"
+            app:layout_constraintLeft_toRightOf="@id/mic_switch"
+            app:layout_constraintRight_toLeftOf="@id/effect_setting"
+            app:layout_constraintTop_toTopOf="@id/mic_switch" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="摄像头"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintLeft_toLeftOf="@id/camera_switch"
+            app:layout_constraintRight_toRightOf="@id/camera_switch"
+            app:layout_constraintTop_toBottomOf="@id/camera_switch" />
+
+        <com.volcengine.vertcdemo.core.widget.PressedImageView
+            android:id="@+id/effect_setting"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginLeft="32dp"
+            android:padding="12dp"
+            android:src="@drawable/live_effect"
+            app:layout_constraintLeft_toRightOf="@id/camera_switch"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="@id/camera_switch" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="美化"
+            android:textColor="@color/white"
+            android:textSize="12sp"
+            app:layout_constraintLeft_toLeftOf="@id/effect_setting"
+            app:layout_constraintRight_toRightOf="@id/effect_setting"
+            app:layout_constraintTop_toBottomOf="@id/effect_setting" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <ImageView
+        android:id="@+id/close_iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="end"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="10dp"
+        android:padding="5dp"
+        android:src="@drawable/feed_share_demo_close_unselected" />
+
+    <TextView
+        android:id="@+id/join_room"
+        android:layout_width="267dp"
+        android:layout_height="50dp"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="75dp"
+        android:background="@drawable/create_feed_share_bg"
+        android:gravity="center"
+        android:text="@string/login_join_room"
+        android:textColor="@color/white" />
+
+</FrameLayout>
