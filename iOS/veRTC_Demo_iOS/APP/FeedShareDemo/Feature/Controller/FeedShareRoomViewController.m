@@ -1,0 +1,337 @@
+//
+//  FeedShareChatRoomViewController.m
+//  veRTC_Demo
+//
+//  Created by bytedance on 2022/1/5.
+//  Copyright © 2022 bytedance. All rights reserved.
+//
+
+#import "FeedShareRoomViewController.h"
+#import "FeedShareRoomViewController+SocketControl.h"
+
+#import "FeedShareRoomVideoView.h"
+#import "FeedShareBottomButtonsView.h"
+#import "FeedShareNavView.h"
+
+
+#import "FeedShareRTCManager.h"
+#import "SystemAuthority.h"
+#import "FeedShareMessageComponent.h"
+#import "FeedShareRTMManager.h"
+#import "FeedShareMediaModel.h"
+#import "BytedEffectProtocol.h"
+
+@interface FeedShareRoomViewController ()<FeedShareBottomButtonsViewDelegate, FeedShareMessageComponentDelegate>
+
+@property (nonatomic, strong) FeedShareRoomModel *roomModel;
+
+@property (nonatomic, strong) FeedShareRoomVideoView *videoView;
+@property (nonatomic, strong) FeedShareNavView *navView;
+@property (nonatomic, strong) FeedShareBottomButtonsView *buttonsView;
+
+@property (nonatomic, strong) BytedEffectProtocol *beautyCompoments;
+@property (nonatomic, strong) FeedShareMessageComponent *messageComponent;
+
+@end
+
+@implementation FeedShareRoomViewController
+
+- (instancetype)initWithRoomModel:(FeedShareRoomModel *)roomModel {
+    if (self = [super init]) {   
+        self.roomModel = roomModel;
+        [[FeedShareRTCManager shareRtc] bingCanvasViewToUid:[LocalUserComponents userModel].uid];
+        
+        [self addSocketListener];
+    }
+    return self;
+}
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor blackColor];
+    [self setupViews];
+    
+    // resume local render effect
+    [self.beautyCompoments resumeLocalEffect];
+    
+    if ([self isHost]) {
+        [self requestVideoListComplete:nil];
+    }
+    self.messageComponent = [[FeedShareMessageComponent alloc] initWithDelegate:self];
+    
+}
+
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    
+    self.buttonsView.enableVideo = [FeedShareMediaModel shared].enableVideo;
+    self.buttonsView.enableAudio = [FeedShareMediaModel shared].enableAudio;
+    [[FeedShareRTCManager shareRtc] enableLocalAudio:[FeedShareMediaModel shared].enableAudio];
+    [[FeedShareRTCManager shareRtc] enableLocalVideo:[FeedShareMediaModel shared].enableVideo];
+    
+    [self.messageComponent addMessageListener];
+    
+    __weak typeof(self) weakSelf = self;
+    [FeedShareRTCManager shareRtc].roomUsersDidChangeBlock = ^{
+        [weakSelf.videoView updateVideoViews];
+    };
+    
+    [[FeedShareRTCManager shareRtc] didChangeNetworkQuality:^(FeedShareNetworkQualityStatus status, NSString * _Nonnull uid) {
+        [weakSelf.navView.networkView updateNetworkQualityStstus:status];
+    }];
+    
+    // show local render view
+    [self.videoView updateVideoViews];
+}
+
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [FeedShareMediaModel shared].enableVideo = self.buttonsView.enableVideo;
+    [FeedShareMediaModel shared].enableAudio = self.buttonsView.enableAudio;
+}
+
+#pragma mark - FeedShareBottomButtonsViewDelegate
+- (void)feedShareBottomButtonsView:(FeedShareBottomButtonsView *)view didClickButtonType:(FeedShareButtonType)type {
+    switch (type) {
+        case FeedShareButtonTypeAudio: {
+            if (![FeedShareMediaModel shared].audioPermissionDenied) {
+                [[FeedShareRTCManager shareRtc] enableLocalAudio:view.enableAudio];
+            } else {
+                AlertActionModel *alertCancelModel = [[AlertActionModel alloc] init];
+                alertCancelModel.title = @"取消";
+                AlertActionModel *alertModel = [[AlertActionModel alloc] init];
+                alertModel.title = @"确定";
+                alertModel.alertModelClickBlock = ^(UIAlertAction * _Nonnull action) {
+                    if ([action.title isEqualToString:@"确定"]) {
+                        [SystemAuthority autoJumpWithAuthorizationStatusWithType:AuthorizationTypeAudio];
+                    }
+                };
+                [[AlertActionManager shareAlertActionManager] showWithMessage:@"麦克风权限已关闭，请至设备设置页开启" actions:@[alertCancelModel, alertModel]];
+            }
+        }
+            break;
+            
+        case FeedShareButtonTypeVideo: {
+            if (![FeedShareMediaModel shared].videoPermissionDenied) {
+                BOOL isEnableVideo = view.enableVideo;
+                [[FeedShareRTCManager shareRtc] enableLocalVideo:isEnableVideo];
+            } else {
+                AlertActionModel *alertCancelModel = [[AlertActionModel alloc] init];
+                alertCancelModel.title = @"取消";
+                AlertActionModel *alertModel = [[AlertActionModel alloc] init];
+                alertModel.title = @"确定";
+                alertModel.alertModelClickBlock = ^(UIAlertAction * _Nonnull action) {
+                    if ([action.title isEqualToString:@"确定"]) {
+                        [SystemAuthority autoJumpWithAuthorizationStatusWithType:AuthorizationTypeCamera];
+                    }
+                };
+                [[AlertActionManager shareAlertActionManager] showWithMessage:@"摄像头权限已关闭，请至设备设置页开启" actions:@[alertCancelModel, alertModel]];
+            }
+        }
+            break;
+            
+        case FeedShareButtonTypeBeauty: {
+            if (self.beautyCompoments) {
+                [self.beautyCompoments showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
+                }];
+            } else {
+                [[ToastComponents shareToastComponents] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
+            }
+        }
+            break;
+            
+        case FeedShareButtonTypeWatch: {
+            if ([self isHost]) {
+                [self startFeedShare];
+            } else {
+                [self.messageComponent sendRequestFeedShareMessage:self.roomModel.hostUid];
+            }
+        }
+            break;
+            
+        default:
+            break;
+    }
+}
+
+#pragma mark - FeedShareMessageComponentDelegate
+- (void)feedShareMessageComponentDidReceiveRequestFeedShare:(FeedShareMessageComponent *)messageComponent {
+    if (self.buttonsView.userInteractionEnabled) {
+        [self startFeedShare];
+    }
+}
+
+#pragma mark - Methods
+- (void)setupViews {
+    [self.view addSubview:self.videoView];
+    [self.videoView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.equalTo(self.view);
+    }];
+    [self.view addSubview:self.navView];
+    [self.view addSubview:self.buttonsView];
+    [self.buttonsView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.equalTo(self.view);
+        make.bottom.mas_equalTo(-10 - [DeviceInforTool getVirtualHomeHeight]);
+    }];
+}
+
+- (void)requestVideoListComplete:(void(^)(BOOL result))complete {
+    __weak typeof(self) weakSelf = self;
+    [FeedShareRTMManager requestVideoListWithRoomID:self.roomModel.roomID block:^(NSArray<FeedShareVideoModel *> * _Nonnull videoList, RTMACKModel * _Nonnull model) {
+        if (!model.result) {
+            [[ToastComponents shareToastComponents] showWithMessage:model.message];
+        } else {
+            weakSelf.videoModelArray = videoList;
+        }
+        if (complete) {
+            complete(model.result);
+        }
+    }];
+}
+
+- (void)startFeedShare {
+    self.buttonsView.userInteractionEnabled = NO;
+    if (self.videoModelArray.count == 0) {
+        __weak typeof(self) weakSelf = self;
+        [self requestVideoListComplete:^(BOOL result) {
+            if (result) {
+                [weakSelf requestChangeRoomStatus];
+            }
+            weakSelf.buttonsView.userInteractionEnabled = YES;
+        }];
+    } else {
+        [self requestChangeRoomStatus];
+    }
+    
+}
+
+- (void)requestChangeRoomStatus {
+    
+    __weak typeof(self) weakSelf = self;
+    [FeedShareRTMManager requestChangeRoomScene:FeedShareRoomStatusShare roomID:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
+        if (!model.result) {
+            [[ToastComponents shareToastComponents] showWithMessage:model.message];
+        } else {
+            weakSelf.roomModel.roomStatus = FeedShareRoomStatusShare;
+            [weakSelf pushPlayViewController];
+        }
+        weakSelf.buttonsView.userInteractionEnabled = YES;
+    }];
+}
+
+- (BOOL)isHost {
+    return [self.roomModel.hostUid isEqual:[LocalUserComponents userModel].uid];
+}
+
+- (void)receivedVideoList:(NSArray<FeedShareVideoModel *> *)videoList {
+    if ([self isHost]) {
+        return;
+    }
+    
+    if (self.playController) {
+        [self.playController updateVideoList:videoList];
+    }
+    else {
+        self.videoModelArray = videoList;
+    }
+}
+
+- (void)receiveUpdateRoomScene:(NSString *)roomID scene:(FeedShareRoomStatus)scene {
+    if ([self isHost]) {
+        return;
+    }
+    
+    NSLog(@"receiveUpdateRoomScene");
+    self.roomModel.roomStatus = scene;
+    if (self.playController && scene == FeedShareRoomStatusChat) {
+        [self.playController popToRoomViewController];
+        self.playController = nil;
+    }
+    
+    if (scene == FeedShareRoomStatusShare && self.videoModelArray.count > 0) {
+        [self pushPlayViewController];
+    }
+}
+
+- (void)pushPlayViewController {
+    FeedSharePlayViewController *ctrl = [[FeedSharePlayViewController alloc] initWithRoomModel:self.roomModel];
+    [ctrl updateVideoList:self.videoModelArray];
+    self.playController = ctrl;
+    [self.navigationController pushViewController:ctrl animated:YES];
+    self.videoModelArray = nil;
+}
+
+- (void)receiveFinishRoom:(NSString *)roomID {
+    if ([self isHost]) {
+        return;
+    }
+    NSLog(@"receiveUpdateRoomSceneFinish");
+    if (self.playController) {
+        [self.playController popToCreateRoomViewController];
+    } else {
+        [self quitRoom];
+    }
+    
+    if (![self isHost]) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [[ToastComponents shareToastComponents] showWithMessage:@"房主已关闭房间"];
+        });
+    }
+}
+
+#pragma mark - actions
+- (void)leaveButtonClick {
+    [FeedShareRTMManager requestLeaveRoom:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
+        if (!model.result) {
+            [[ToastComponents shareToastComponents] showWithMessage:model.message];
+        }
+    }];
+    [self quitRoom];
+}
+
+- (void)quitRoom {
+    [self.navigationController popViewControllerAnimated:YES];
+    [[FeedShareRTCManager shareRtc] leaveChannel];
+}
+
+#pragma mark - getter
+
+- (FeedShareRoomVideoView *)videoView {
+    if (!_videoView) {
+        _videoView = [[FeedShareRoomVideoView alloc] init];
+    }
+    return _videoView;
+}
+
+
+
+- (BytedEffectProtocol *)beautyCompoments {
+    if (!_beautyCompoments) {
+        _beautyCompoments = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
+    }
+    return _beautyCompoments;
+}
+
+- (FeedShareBottomButtonsView *)buttonsView {
+    if (!_buttonsView) {
+        _buttonsView = [[FeedShareBottomButtonsView alloc] init];
+        _buttonsView.type = FeedShareButtonViewTypeRoom;
+        _buttonsView.delegate = self;
+    }
+    return _buttonsView;
+}
+
+- (FeedShareNavView *)navView {
+    if (!_navView) {
+        _navView = [[FeedShareNavView alloc] init];
+        _navView.title = [NSString stringWithFormat:@"房间ID : %@", _roomModel.roomID];
+        __weak typeof(self) weakSelf = self;
+        _navView.leaveButtonTouchBlock = ^{
+            [weakSelf leaveButtonClick];
+        };
+    }
+    return _navView;
+}
+
+
+@end
