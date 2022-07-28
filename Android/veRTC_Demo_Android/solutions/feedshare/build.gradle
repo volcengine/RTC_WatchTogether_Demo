@@ -54,11 +54,11 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:1.4.10"
 
-    implementation('com.bytedance.ugc.framework.libs:ttsdk-ttlivepull:1.25.2.106') {
-        exclude group: 'com.bytedance.ugc.framework.libs', module: 'ttsdk-ttrtcbase'
+    implementation('com.bytedanceapi:ttsdk-ttlivepull:1.25.2.106') {
+        exclude group: 'com.bytedanceapi', module: 'ttsdk-ttrtcbase'
     }
-    implementation('com.bytedance.ugc.framework.libs:ttsdk-player_premium:1.25.2.106') {
-        exclude group: 'com.bytedance.ugc.framework.libs', module: 'ttsdk-ttrtcbase'
+    implementation('com.bytedanceapi:ttsdk-player_premium:1.25.2.106') {
+        exclude group: 'com.bytedanceapi', module: 'ttsdk-ttrtcbase'
     }
 
     implementation project(":scene-core")
