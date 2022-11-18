@@ -2,7 +2,7 @@
 //  LiveDemoConstants.h
 //  Pods
 //
-//  Created by bytedance on 2022/4/29.
+//  Created by on 2022/4/29.
 //
 
 #ifndef LiveDemoConstants_h
@@ -22,16 +22,9 @@
  */
 #define ContentCategory @""
 
-#ifdef DEBUG
-
 #define TTAPPID @"314168"
 #define TTLicenseName @"ttsdk_premium_debug"
 
 #else
-
-#define TTAPPID @"311128"
-#define TTLicenseName @"ttsdk_premium"
-
-#endif
 
 #endif /* LiveDemoConstants_h */

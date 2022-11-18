@@ -2,8 +2,8 @@
 //  FeedShareMediaModel.h
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/4/7.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/4/7.
+//  
 //
 
 #import <Foundation/Foundation.h>

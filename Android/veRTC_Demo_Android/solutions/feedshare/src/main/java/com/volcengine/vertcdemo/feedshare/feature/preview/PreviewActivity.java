@@ -10,7 +10,7 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.util.Log;
-import android.util.Pair;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -22,12 +22,13 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 
-import com.ss.bytertc.engine.RTCEngine;
+import com.ss.bytertc.engine.RTCVideo;
 import com.ss.bytertc.engine.VideoCanvas;
-import com.ss.bytertc.engine.VideoStreamDescription;
+import com.ss.bytertc.engine.VideoEncoderConfig;
 import com.ss.bytertc.engine.data.CameraId;
 import com.ss.bytertc.engine.data.MirrorType;
 import com.ss.bytertc.engine.data.StreamIndex;
+import com.ss.ttm.utils.Util;
 import com.ss.video.rtc.demo.basic_module.acivities.BaseActivity;
 import com.ss.video.rtc.demo.basic_module.adapter.TextWatcherAdapter;
 import com.ss.video.rtc.demo.basic_module.ui.CommonDialog;
@@ -36,25 +37,25 @@ import com.ss.video.rtc.demo.basic_module.utils.SafeToast;
 import com.ss.video.rtc.demo.basic_module.utils.WindowUtils;
 import com.volcengine.vertcdemo.common.LengthFilterWithCallback;
 import com.volcengine.vertcdemo.core.SolutionDataManager;
-import com.volcengine.vertcdemo.core.net.rtm.RTMBaseClient;
-import com.volcengine.vertcdemo.core.net.rtm.RtmInfo;
+import com.volcengine.vertcdemo.core.net.rts.RTSBaseClient;
+import com.volcengine.vertcdemo.core.net.rts.RTSInfo;
 import com.volcengine.vertcdemo.feedshare.R;
-import com.volcengine.vertcdemo.feedshare.utils.MicCameraSwitchHelper;
 import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRtcManager;
-import com.volcengine.vertcdemo.feedshare.feature.effect.EffectDialog;
-import com.volcengine.vertcdemo.feedshare.feature.effect.EffectHelper;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTCManager;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTSClient;
 import com.volcengine.vertcdemo.feedshare.feature.feedshare.FeedShareActivity;
 import com.volcengine.vertcdemo.feedshare.utils.FeedShareConstants;
+import com.volcengine.vertcdemo.feedshare.utils.MicCameraSwitchHelper;
 import com.volcengine.vertcdemo.feedshare.utils.TTSdkHelper;
+import com.volcengine.vertcdemo.utils.DebounceClickListener;
+import com.volcengine.vertcdemo.utils.Utils;
 
-import java.util.Collections;
 import java.util.regex.Pattern;
 
 /**
  * 一起看Demo预览&登陆页
  */
-public class PreviewActivity extends BaseActivity implements View.OnClickListener {
+public class PreviewActivity extends BaseActivity {
     private static final String TAG = "[TW]PreviewActivity";
     public static final String ROOM_INPUT_REGEX = "^[a-zA-Z0-9@_-]+$";
     public static final String SCENE_NAME = "tw";
@@ -70,22 +71,21 @@ public class PreviewActivity extends BaseActivity implements View.OnClickListene
     private ImageView mMicSwitch;
     private ImageView mEffectSetting;
     private ImageView mCloseIv;
-    private RTCEngine mRtcEngine;
+    private RTCVideo mRtcEngine;
 
-    public static void start(Context context, @NonNull RtmInfo rtmInfo) {
+    public static void start(Context context, @NonNull RTSInfo rtmInfo) {
         if (!rtmInfo.isValid()) {
             Log.e(TAG, "rtmInfo is not valid.");
             return;
         }
-        FeedShareRtcManager.getInstance().init(rtmInfo);
-        RTMBaseClient rtmClient = FeedShareRtcManager.getInstance().getRTMClient();
+        FeedShareRTCManager.getInstance().initEngine(rtmInfo);
+        RTSBaseClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
         if (rtmClient == null) {
             return;
         }
-
         rtmClient.login(rtmInfo.rtmToken,
                 (resultCode, message) -> {
-                    if (resultCode == RTMBaseClient.LoginCallBack.SUCCESS) {
+                    if (resultCode == RTSBaseClient.LoginCallBack.SUCCESS) {
                         Intent intent = new Intent(context, PreviewActivity.class);
                         context.startActivity(intent);
                     } else {
@@ -116,22 +116,29 @@ public class PreviewActivity extends BaseActivity implements View.OnClickListene
         micCameraSwitchHelper.setCameraBtn(mCameraSwitch);
         micCameraSwitchHelper.setStatusView(mCameraStatus);
         initRtc();
+        clearUser();
         if (micCameraSwitchHelper != null) {
             micCameraSwitchHelper.setEngine(mRtcEngine);
             micCameraSwitchHelper.updateMicAndCameraUI();
             micCameraSwitchHelper.updateRtcAudioAndVideoCapture();
         }
-        FeedShareDataManger.getInstance().initEffectHelper();
+    }
+
+    private void clearUser() {
+        FeedShareRTSClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
+        if (rtmClient == null) return;
+        rtmClient.requestClearUser();
     }
 
     private void initRtc() {
-        mRtcEngine = FeedShareRtcManager.getInstance().getEngine();
+        mRtcEngine = FeedShareRTCManager.getInstance().getEngine();
         // 设置视频参数
-        VideoStreamDescription description = new VideoStreamDescription();
-        description.videoSize = new Pair<>(FeedShareConstants.VIDEO_SIZE_WIDTH, FeedShareConstants.VIDEO_SIZE_HEIGHT);
-        description.frameRate = FeedShareConstants.VIDEO_FRAME_RATE;
-        description.maxKbps = FeedShareConstants.VIDEO_MAX_KBPS;
-        mRtcEngine.setVideoEncoderConfig(Collections.singletonList(description));
+        VideoEncoderConfig config = new VideoEncoderConfig();
+        config.width = FeedShareConstants.VIDEO_SIZE_WIDTH;
+        config.height = FeedShareConstants.VIDEO_SIZE_HEIGHT;
+        config.frameRate = FeedShareConstants.VIDEO_FRAME_RATE;
+        config.maxBitrate = FeedShareConstants.VIDEO_MAX_KBPS;
+        mRtcEngine.setVideoEncoderConfig(config);
         mRtcEngine.setLocalVideoMirrorType(MirrorType.MIRROR_TYPE_RENDER_AND_ENCODER);
         setLocalRenderView();
     }
@@ -153,12 +160,35 @@ public class PreviewActivity extends BaseActivity implements View.OnClickListene
         mMicSwitch = findViewById(R.id.mic_switch);
         mEffectSetting = findViewById(R.id.effect_setting);
 
-        mRootView.setOnClickListener(this);
-        mJoinRoom.setOnClickListener(this);
-        mCameraSwitch.setOnClickListener(this);
-        mMicSwitch.setOnClickListener(this);
-        mEffectSetting.setOnClickListener(this);
-        mCloseIv.setOnClickListener(this);
+        mRootView.setOnClickListener(DebounceClickListener.create(v -> IMEUtils.closeIME(mRootView)));
+        mJoinRoom.setOnClickListener(DebounceClickListener.create(v -> {
+            if (mRtcEngine == null) {
+                SafeToast.show(this, "需要先初始化RTC引擎", Toast.LENGTH_SHORT);
+                return;
+            }
+            String roomId = getRoomId();
+            if (TextUtils.isEmpty(roomId)) {
+                SafeToast.show(this, "房间号不能为空", Toast.LENGTH_SHORT);
+                return;
+            }
+            FeedShareDataManger.getInstance().setRoomId(roomId);
+            FeedShareActivity.start(this);
+        }));
+        mCameraSwitch.setOnClickListener(DebounceClickListener.create(v -> {
+            if (micCameraSwitchHelper != null) {
+                micCameraSwitchHelper.toggleCamera();
+            }
+        }));
+        mMicSwitch.setOnClickListener(DebounceClickListener.create(v -> {
+            if (micCameraSwitchHelper != null) {
+                micCameraSwitchHelper.toggleMic();
+            }
+        }));
+        mEffectSetting.setOnClickListener(DebounceClickListener.create(v -> openVideoEffectDialog()));
+        mCloseIv.setOnClickListener(DebounceClickListener.create(v -> {
+            FeedShareDataManger.getInstance().clear();
+            finish();
+        }));
 
         mRoomIdEt.addTextChangedListener(mTextWatcher);
         InputFilter meetingIDFilter = new LengthFilterWithCallback(18, (overflow) -> mRoomIdOverflow = overflow);
@@ -174,81 +204,22 @@ public class PreviewActivity extends BaseActivity implements View.OnClickListene
         videoCanvas.isScreen = false;
         videoCanvas.renderMode = VideoCanvas.RENDER_MODE_HIDDEN;
         String selfUid = SolutionDataManager.ins().getUserId();
-        if (TextUtils.isEmpty(selfUid)) return;
-        videoCanvas.renderView = FeedShareDataManger.getInstance().getUserRenderView(selfUid);
+        if (TextUtils.isEmpty(selfUid)) {
+            return;
+        }
+        TextureView renderView = FeedShareDataManger.getInstance().getUserRenderView(selfUid);
+        videoCanvas.renderView = renderView;
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        mPreviewContainer.removeAllViews();
-        mPreviewContainer.addView(videoCanvas.renderView, params);
+        Utils.attachViewToViewGroup(mPreviewContainer, renderView, params);
         mPreviewContainer.setVisibility(View.VISIBLE);
         mRtcEngine.setLocalVideoCanvas(StreamIndex.STREAM_INDEX_MAIN, null);
         mRtcEngine.setLocalVideoCanvas(StreamIndex.STREAM_INDEX_MAIN, videoCanvas);
     }
 
-    @Override
-    public void onClick(View v) {
-        if (v == mJoinRoom) {
-            if (mRtcEngine == null) {
-                SafeToast.show(this, "需要先初始化RTC引擎", Toast.LENGTH_SHORT);
-                return;
-            }
-            String roomId = getRoomId();
-            if (TextUtils.isEmpty(roomId)) {
-                SafeToast.show(this, "房间号不能为空", Toast.LENGTH_SHORT);
-                return;
-            }
-            FeedShareDataManger.getInstance().setUserId(SolutionDataManager.ins().getUserId());
-            FeedShareDataManger.getInstance().setRoomId(roomId);
-            FeedShareActivity.start(this);
-        } else if (v == mCameraSwitch) {
-            if (micCameraSwitchHelper != null) {
-                micCameraSwitchHelper.toggleCamera();
-            }
-        } else if (v == mMicSwitch) {
-            if (micCameraSwitchHelper != null) {
-                micCameraSwitchHelper.toggleMic();
-            }
-        } else if (v == mEffectSetting) {
-            openVideoEffectDialog();
-        } else if (v == mRootView) {
-            IMEUtils.closeIME(mRootView);
-        } else if (v == mCloseIv) {
-            FeedShareDataManger.getInstance().clear();
-            finish();
-        }
-    }
-
     private void openVideoEffectDialog() {
-        EffectDialog effectDialog = new EffectDialog(this);
-        EffectHelper helper = FeedShareDataManger.getInstance().getEffectHelper();
-        effectDialog.setCallBack(new EffectDialog.AdjustCallBack() {
-            @Override
-            public void updateVideoEffectNode(String path, String key, float val) {
-                helper.updateVideoEffectNode(path, key, val);
-            }
-
-            @Override
-            public void setVideoEffectColorFilter(String path) {
-                helper.setVideoEffectColorFilter(path);
-            }
-
-            @Override
-            public void updateColorFilterIntensity(float intensity) {
-                helper.updateColorFilterIntensity(intensity);
-            }
-
-            @Override
-            public void setStickerNodes(String path) {
-                helper.setStickerNodes(path);
-            }
-
-            @Override
-            public void reset() {
-                effectDialog.setDefaultProgress(0);
-            }
-        });
-        effectDialog.show();
+        FeedShareRTCManager.getInstance().openEffectDialog(this);
     }
 
     @Override
@@ -321,9 +292,9 @@ public class PreviewActivity extends BaseActivity implements View.OnClickListene
     }
 
     public String getRoomId() {
-        return mRoomIdEt.getText().toString().trim();
+        // todo 隔离临时方案
+        return "feed_" + mRoomIdEt.getText().toString().trim();
     }
-
 
     @Override
     protected void onDestroy() {

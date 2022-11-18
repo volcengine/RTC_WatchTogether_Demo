@@ -119,6 +119,11 @@ public class VOLCVideoView extends FrameLayout implements VideoPlayListener, Tim
         }
     }
 
+    @Nullable
+    public VideoController getVideoController() {
+        return mVideoController;
+    }
+
     // 返回秒
     public int getProgress() {
         return mVideoController.getCurrentPlaybackTime() / 1000;

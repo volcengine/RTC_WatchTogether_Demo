@@ -44,14 +44,14 @@
 
 进入 `scene-core/gradle.properties` 文件，填写 **LoginUrl**。
 
-当前你可以使用 **`http://rtc-test.bytedance.com/rtc_demo_special/login`** 作为测试服务器域名，仅提供跑通测试服务，无法保障正式需求。
+当前你可以使用 **`https://common.rtc.volcvideo.com/rtc_demo_special/login`** 作为测试服务器域名，仅提供跑通测试服务，无法保障正式需求。
 
 <img src="https://lf3-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_b9dc9e45aca3b39a2da0167b6ff20c12" width="500px" >
 
 3. **填写 APPID、APPKey、AccessKeyID、SecretAccessKey、Partner 和 Category**
 	
 
-进入根目录下 `gradle.properties`文件，填写 **APPID、APPKey、AccessKeyID、SecretAccessKey、Partner 和 Category**
+进入 `component/joinrtsparams` 目录下 `gradle.properties`文件，填写 **APPID、APPKey、AccessKeyID、SecretAccessKey、Partner 和 Category**
 
 > ACCOUNT\_ID 和 VOD\_SPACE 为录制相关功能配置参数，此 Demo 无录制功能，填 `1` 即可。
 

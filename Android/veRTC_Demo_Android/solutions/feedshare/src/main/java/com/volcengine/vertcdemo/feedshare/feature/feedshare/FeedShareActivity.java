@@ -1,11 +1,15 @@
 package com.volcengine.vertcdemo.feedshare.feature.feedshare;
 
+import static com.volcengine.vertcdemo.feedshare.utils.VodAudioProcessor.DEFAULT_RTC_AUDIO_GAIN;
+import static com.volcengine.vertcdemo.feedshare.utils.VodAudioProcessor.DEFAULT_VIDEO_AUDIO_GAIN;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.TextureView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -17,9 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.constraintlayout.widget.Group;
 import androidx.core.content.ContextCompat;
 
-import com.ss.bytertc.engine.RTCEngine;
-import com.ss.bytertc.engine.RTCRoomConfig;
-import com.ss.bytertc.engine.UserInfo;
+import com.ss.bytertc.engine.RTCVideo;
 import com.ss.bytertc.engine.VideoCanvas;
 import com.ss.bytertc.engine.data.CameraId;
 import com.ss.bytertc.engine.data.MirrorType;
@@ -28,18 +30,15 @@ import com.ss.video.rtc.demo.basic_module.acivities.BaseActivity;
 import com.ss.video.rtc.demo.basic_module.utils.SafeToast;
 import com.volcengine.vertcdemo.core.eventbus.SolutionDemoEventManager;
 import com.volcengine.vertcdemo.core.net.IRequestCallback;
-import com.volcengine.vertcdemo.core.net.rtm.RTMBaseClient;
+import com.volcengine.vertcdemo.core.net.rts.RTSBaseClient;
+import com.volcengine.vertcdemo.feedshare.BuildConfig;
 import com.volcengine.vertcdemo.feedshare.R;
-import com.volcengine.vertcdemo.feedshare.utils.MicCameraSwitchHelper;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRTMClient;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRtcManager;
-import com.volcengine.vertcdemo.feedshare.feature.AudioControllerDialog;
-import com.volcengine.vertcdemo.feedshare.feature.effect.EffectDialog;
-import com.volcengine.vertcdemo.feedshare.feature.effect.EffectHelper;
 import com.volcengine.vertcdemo.feedshare.bean.JoinRoomResponse;
 import com.volcengine.vertcdemo.feedshare.bean.VideoItem;
 import com.volcengine.vertcdemo.feedshare.bean.VideoResponse;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTCManager;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTSClient;
 import com.volcengine.vertcdemo.feedshare.event.ContentUpdateInform;
 import com.volcengine.vertcdemo.feedshare.event.FinishRoomInform;
 import com.volcengine.vertcdemo.feedshare.event.RTCErrorEvent;
@@ -47,14 +46,19 @@ import com.volcengine.vertcdemo.feedshare.event.RTCNetStatusEvent;
 import com.volcengine.vertcdemo.feedshare.event.RTCUserJoinEvent;
 import com.volcengine.vertcdemo.feedshare.event.RTCUserLeaveEvent;
 import com.volcengine.vertcdemo.feedshare.event.UpdateRoomSceneInform;
-import com.volcengine.vertcdemo.feedshare.utils.VodAudioProcessor;
+import com.volcengine.vertcdemo.feedshare.feature.AudioControllerDialog;
+import com.volcengine.vertcdemo.feedshare.utils.MicCameraSwitchHelper;
+import com.volcengine.vertcdemo.utils.DebounceClickListener;
+import com.volcengine.vertcdemo.utils.Utils;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class FeedShareActivity extends BaseActivity {
     private static final String TAG = "FeedShareActivity";
@@ -73,6 +77,8 @@ public class FeedShareActivity extends BaseActivity {
     private MicCameraSwitchHelper micCameraSwitchHelper;
     private List<String> mRemoteUserIds;
     private final List<VideoItem> mRoomContentList = new ArrayList<>();
+    // 用户id和父布局的映射
+    private final Map<String, FrameLayout> mUserIdContainerMap = new HashMap<>();
 
     private final ISyncHandler mRTCMsgSyncHandler = new SyncHandlerAdapter() {
         @Override
@@ -92,18 +98,37 @@ public class FeedShareActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_feed_share);
-
         initUI();
         joinRoom();
         SolutionDemoEventManager.register(this);
-        FeedShareRtcManager.getInstance().addSyncHandler(mRTCMsgSyncHandler);
+        FeedShareRTCManager.getInstance().addSyncHandler(mRTCMsgSyncHandler);
+    }
+
+    /**
+     * 尝试离开房间
+     */
+    private void attemptLeave() {
+        boolean isHost = FeedShareDataManger.getInstance().isHost();
+        int curScene = FeedShareDataManger.getInstance().getCurScene();
+        if (isHost && curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE) {
+            updateRoomSceneValueAndUi(JoinRoomResponse.FEED_SHARE_ROOM_SCENE_CHAT, true);
+        } else {
+            requestLeaveRoom();
+            finish();
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        attemptLeave();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        mUserIdContainerMap.clear();
         SolutionDemoEventManager.unregister(this);
-        FeedShareRtcManager.getInstance().removeSyncHandler(mRTCMsgSyncHandler);
+        FeedShareRTCManager.getInstance().removeSyncHandler(mRTCMsgSyncHandler);
     }
 
     private void initUI() {
@@ -116,29 +141,21 @@ public class FeedShareActivity extends BaseActivity {
         mShareRemoteContainer1 = findViewById(R.id.share_remote_user_1);
         mShareRemoteContainer2 = findViewById(R.id.share_remote_user_2);
         ImageView micSwitchIv = findViewById(R.id.mic_switch);
-        micSwitchIv.setOnClickListener((v) -> toggleLocalAudio());
+        micSwitchIv.setOnClickListener(DebounceClickListener.create(v -> toggleLocalAudio()));
         ImageView cameraSwitchIv = findViewById(R.id.camera_switch);
-        cameraSwitchIv.setOnClickListener((v) -> toggleLocalVideo());
-        findViewById(R.id.effect_setting).setOnClickListener(v -> openVideoEffectDialog());
-        findViewById(R.id.setting_iv).setOnClickListener(v -> openSetting());
-        findViewById(R.id.feed_share_iv).setOnClickListener(v -> startFeedShare());
-        findViewById(R.id.hangup_iv).setOnClickListener(v -> {
-            boolean isHost = FeedShareDataManger.getInstance().isHost();
-            int curScene = FeedShareDataManger.getInstance().getCurScene();
-            if (isHost && curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE) {
-                updateRoomSceneValueAndUi(JoinRoomResponse.FEED_SHARE_ROOM_SCENE_CHAT, true);
-            } else {
-                finish();
-                requestLeaveRoom();
-            }
-        });
-        findViewById(R.id.change_camera).setOnClickListener((v) -> onChangeCameraClick());
-
-        mNetStatus = findViewById(R.id.local_net_status_tv);
+        cameraSwitchIv.setOnClickListener(DebounceClickListener.create(v -> toggleLocalVideo()));
+        findViewById(R.id.effect_setting).setOnClickListener(DebounceClickListener.create(v -> openVideoEffectDialog()));
+        findViewById(R.id.setting_iv).setOnClickListener(DebounceClickListener.create(v -> openSetting()));
+        findViewById(R.id.feed_share_iv).setOnClickListener(DebounceClickListener.create(view -> startFeedShare()));
+        findViewById(R.id.hangup_iv).setOnClickListener(DebounceClickListener.create(v -> {
+            attemptLeave();
+        }));
+        findViewById(R.id.change_camera).setOnClickListener(DebounceClickListener.create(v -> onChangeCameraClick()));
         mNetStatus = findViewById(R.id.local_net_status_tv);
 
         TextView roomIDTV = findViewById(R.id.room_id_tv);
-        roomIDTV.setText(String.format("RoomID:%s", FeedShareDataManger.getInstance().getRoomId()));
+        // todo 隔离临时方案
+        roomIDTV.setText(String.format("RoomID:%s", FeedShareDataManger.getInstance().getRoomId().replace("feed_", "")));
 
         micCameraSwitchHelper = new MicCameraSwitchHelper();
         micCameraSwitchHelper.setEngine(getEngine());
@@ -159,10 +176,14 @@ public class FeedShareActivity extends BaseActivity {
                 @Override
                 public void onSuccess(VideoResponse data) {
                     if (isFinishing()) return;
-                    if (data == null || data.videoItemList == null) {
+                    if (data == null) {
                         return;
                     }
-                    mRoomContentList.addAll(data.videoItemList);
+                    List<VideoItem> videoItemList = data.videoItemList;
+                    if (videoItemList == null) {
+                        return;
+                    }
+                    mRoomContentList.addAll(videoItemList);
                     updateRoomSceneValueAndUi(JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE, true);
                 }
 
@@ -174,7 +195,7 @@ public class FeedShareActivity extends BaseActivity {
         } else {
             String hostUid = FeedShareDataManger.getInstance().getHostUid();
             String msg = SyncMessageUtil.createRequestShareFeedMessage();
-            FeedShareRtcManager.getInstance().sendMessageToUser(hostUid, msg);
+            FeedShareRTCManager.getInstance().sendMessageToUser(hostUid, msg);
         }
     }
 
@@ -193,7 +214,7 @@ public class FeedShareActivity extends BaseActivity {
             bindViewForScene();
             return;
         }
-        FeedShareRTMClient rtmClient = FeedShareRtcManager.getInstance().getRTMClient();
+        FeedShareRTSClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
         if (rtmClient == null) {
             return;
         }
@@ -214,7 +235,7 @@ public class FeedShareActivity extends BaseActivity {
 
     /*** 切换前置/后置摄像头（默认使用前置摄像头）*/
     private void onChangeCameraClick() {
-        RTCEngine engine = getEngine();
+        RTCVideo engine = getEngine();
         boolean isFront = mCameraID.equals(CameraId.CAMERA_ID_FRONT);
         mCameraID = isFront ? CameraId.CAMERA_ID_BACK : CameraId.CAMERA_ID_FRONT;
         engine.setLocalVideoMirrorType(isFront ? MirrorType.MIRROR_TYPE_NONE : MirrorType.MIRROR_TYPE_RENDER_AND_ENCODER);
@@ -234,42 +255,14 @@ public class FeedShareActivity extends BaseActivity {
     }
 
     private void openVideoEffectDialog() {
-        EffectDialog effectDialog = new EffectDialog(this);
-        EffectHelper helper = FeedShareDataManger.getInstance().getEffectHelper();
-        effectDialog.setCallBack(new EffectDialog.AdjustCallBack() {
-            @Override
-            public void updateVideoEffectNode(String path, String key, float val) {
-                helper.updateVideoEffectNode(path, key, val);
-            }
-
-            @Override
-            public void setVideoEffectColorFilter(String path) {
-                helper.setVideoEffectColorFilter(path);
-            }
-
-            @Override
-            public void updateColorFilterIntensity(float intensity) {
-                helper.updateColorFilterIntensity(intensity);
-            }
-
-            @Override
-            public void setStickerNodes(String path) {
-                helper.setStickerNodes(path);
-            }
-
-            @Override
-            public void reset() {
-                effectDialog.setDefaultProgress(0);
-            }
-        });
-        effectDialog.show();
+        FeedShareRTCManager.getInstance().openEffectDialog(this);
     }
 
-    private int mVideoAudioGain = 20;
-    private int mRtcAudioGain = 100;
+    private int mVideoAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
+    private int mRtcAudioGain = DEFAULT_RTC_AUDIO_GAIN;
 
-    private RTCEngine getEngine() {
-        return FeedShareRtcManager.getInstance().getEngine();
+    private RTCVideo getEngine() {
+        return FeedShareRTCManager.getInstance().getEngine();
     }
 
     public void openSetting() {
@@ -279,11 +272,11 @@ public class FeedShareActivity extends BaseActivity {
         audioDialog.setAudioChangeListener(new AudioControllerDialog.AudioChangeListener() {
             @Override
             public void onVideoAudioChange(int progress) {
-                RTCEngine engine = getEngine();
+                RTCVideo engine = getEngine();
                 if (engine == null) {
                     return;
                 }
-                VodAudioProcessor.mixAudioGain = progress;
+                mVideosFragment.setMixAudioGain(progress);
             }
 
             @Override
@@ -293,7 +286,7 @@ public class FeedShareActivity extends BaseActivity {
 
             @Override
             public void onRtcAudioChange(int progress) {
-                RTCEngine engine = getEngine();
+                RTCVideo engine = getEngine();
                 if (engine == null) {
                     return;
                 }
@@ -309,7 +302,7 @@ public class FeedShareActivity extends BaseActivity {
     }
 
     private void joinRoom() {
-        FeedShareRTMClient rtmClient = FeedShareRtcManager.getInstance().getRTMClient();
+        FeedShareRTSClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
         if (rtmClient == null) {
             return;
         }
@@ -326,19 +319,15 @@ public class FeedShareActivity extends BaseActivity {
                 FeedShareDataManger.getInstance().setHostUid(data.hostUid);
                 String userId = FeedShareDataManger.getInstance().getUserId();
                 String roomId = FeedShareDataManger.getInstance().getRoomId();
-                //RTC入房
-                RTCRoomConfig roomConfig = new RTCRoomConfig(RTCEngine.ChannelProfile.CHANNEL_PROFILE_COMMUNICATION, true, true, true);
-                RTCEngine engine = getEngine();
-                int joinRoomResult = engine.joinRoom(data.rtcToken, roomId, UserInfo.create(userId, ""), roomConfig);
+                FeedShareRTCManager.getInstance().joinRoom(roomId, data.rtcToken, userId);
+
                 int videoSize = data.contentList == null ? 0 : data.contentList.size();
-                if (joinRoomResult == 0) {
-                    if (videoSize > 0) {
-                        mRoomContentList.addAll(data.contentList);
-                    }
-                    updateRoomSceneValueAndUi(data.roomScene, false);
-                } else {
-                    Log.i(TAG, "joinRoom joinRoomResult != 0");
+
+                if (videoSize > 0) {
+                    mRoomContentList.addAll(data.contentList);
                 }
+                updateRoomSceneValueAndUi(data.roomScene, false);
+
                 //房主预加载视频数据
                 if (TextUtils.equals(data.hostUid, userId) && videoSize == 0) {
                     requestVideos(new IRequestCallback<VideoResponse>() {
@@ -359,17 +348,19 @@ public class FeedShareActivity extends BaseActivity {
 
             @Override
             public void onError(int errorCode, String message) {
-                if (RTMBaseClient.ERROR_CODE_USERNAME_SAME == errorCode) {
+                if (RTSBaseClient.ERROR_CODE_USERNAME_SAME == errorCode) {
                     SafeToast.show(FeedShareActivity.this, "该用户已存在房间中", Toast.LENGTH_SHORT);
                     finish();
                     return;
                 }
-                if (RTMBaseClient.ERROR_CODE_ROOM_FULL == errorCode) {
+                if (RTSBaseClient.ERROR_CODE_ROOM_FULL == errorCode) {
                     SafeToast.show(FeedShareActivity.this, "房间人数已满", Toast.LENGTH_SHORT);
                     finish();
                     return;
                 }
-                Log.i(TAG, "joinRoom biz failed message: " + message + ",errorCode:" + errorCode);
+                String msg = "joinRoom biz failed message: " + message + ",errorCode:" + errorCode;
+                SafeToast.show(FeedShareActivity.this, msg, Toast.LENGTH_SHORT);
+                Log.i(TAG, msg);
             }
         });
     }
@@ -382,15 +373,35 @@ public class FeedShareActivity extends BaseActivity {
         mShareViews.setVisibility(shareViewVisible ? View.VISIBLE : View.GONE);
         setLocalRenderView();
         if (mRemoteUserIds != null && mRemoteUserIds.size() > 0) {
-            for (String uid : mRemoteUserIds) {
-                setRemoteView(uid);
+            for (int i = 0; i < Math.min(mRemoteUserIds.size(), 2); i++) {
+                setRemoteView(mRemoteUserIds.get(i), i);
             }
         }
-        if (curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE) {
+
+        boolean isShareScene = curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE;
+        if (isShareScene) {
             showVideoFragment();
         } else {
             removeVideoFragment();
+
         }
+
+        setRenderViewGroupVisibility(mChatSelfContainer, !isShareScene);
+        setRenderViewGroupVisibility(mChatRemoteContainer1, !isShareScene);
+        setRenderViewGroupVisibility(mChatRemoteContainer2, !isShareScene);
+
+        setRenderViewGroupVisibility(mShareSelfContainer, isShareScene);
+        setRenderViewGroupVisibility(mShareRemoteContainer1, isShareScene);
+        setRenderViewGroupVisibility(mShareRemoteContainer2, isShareScene);
+    }
+
+    /**
+     * 设置视频渲染控件父布局的可见性
+     * @param container 视频渲染控件的父布局
+     * @param visible 这个 container 是否应该在场景下显示
+     */
+    private void setRenderViewGroupVisibility(ViewGroup container, boolean visible) {
+        container.setVisibility(container.getChildCount() > 0 && visible ? View.VISIBLE : View.GONE);
     }
 
     /***设置自己视频渲染*/
@@ -405,7 +416,7 @@ public class FeedShareActivity extends BaseActivity {
     }
 
     /***设置远端用户视频渲染*/
-    private void setRemoteView(String userId) {
+    private void setRemoteView(String userId, int index) {
         if (TextUtils.isEmpty(userId)) return;
         int curScene = FeedShareDataManger.getInstance().getCurScene();
         FrameLayout remoteContainer1 = curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE
@@ -414,36 +425,36 @@ public class FeedShareActivity extends BaseActivity {
         FrameLayout remoteContainer2 = curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE
                 ? mShareRemoteContainer2
                 : mChatRemoteContainer2;
-        int container1Child = remoteContainer1.getChildCount();
-        int container2Child = remoteContainer2.getChildCount();
-        FrameLayout remoteContainer = null;
-        if (container1Child == 0) {
+
+        FrameLayout remoteContainer;
+        if (index == 0) {
             remoteContainer = remoteContainer1;
-        }
-        if (remoteContainer == null && container2Child == 0) {
+        } else if (index == 1) {
             remoteContainer = remoteContainer2;
+        } else {
+            return;
         }
-        if (remoteContainer != null) {
-            attachRenderView(remoteContainer, userId, true);
-        }
+        attachRenderView(remoteContainer, userId, true);
     }
 
     private void attachRenderView(FrameLayout parentView, String uid, boolean isRemoteUser) {
-        final RTCEngine engine = getEngine();
+        final RTCVideo engine = getEngine();
         if (parentView == null || TextUtils.isEmpty(uid) || engine == null) {
             return;
         }
+        mUserIdContainerMap.put(uid, parentView);
         VideoCanvas videoCanvas = new VideoCanvas();
+        videoCanvas.roomId = FeedShareDataManger.getInstance().getRoomId();
         videoCanvas.uid = uid;
         videoCanvas.isScreen = false;
         videoCanvas.renderMode = VideoCanvas.RENDER_MODE_HIDDEN;
-        videoCanvas.renderView = FeedShareDataManger.getInstance().getUserRenderView(uid);
+        TextureView renderView = FeedShareDataManger.getInstance().getUserRenderView(uid);
+        videoCanvas.renderView = renderView;
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT);
-        parentView.removeAllViews();
-        parentView.addView(videoCanvas.renderView, params);
         parentView.setVisibility(View.VISIBLE);
+        Utils.attachViewToViewGroup(parentView, renderView, params);
         if (isRemoteUser) {
             engine.setRemoteVideoCanvas(uid, StreamIndex.STREAM_INDEX_MAIN, null);
             engine.setRemoteVideoCanvas(uid, StreamIndex.STREAM_INDEX_MAIN, videoCanvas);
@@ -454,7 +465,7 @@ public class FeedShareActivity extends BaseActivity {
     }
 
     private void requestVideos(IRequestCallback<VideoResponse> callback) {
-        FeedShareRTMClient rtmClient = FeedShareRtcManager.getInstance().getRTMClient();
+        FeedShareRTSClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
         if (rtmClient == null) {
             return;
         }
@@ -462,6 +473,7 @@ public class FeedShareActivity extends BaseActivity {
     }
 
     private void showVideoFragment() {
+        Log.e(TAG, "RoomContentList size=" + (mRoomContentList == null ? 0 : mRoomContentList.size()));
         if (mVideosFragment != null && mVideosFragment.isVisible()) return;
         if (mRoomContentList != null && mRoomContentList.size() > 0) {
             mVideosFragment = new VideoFragment();
@@ -470,6 +482,10 @@ public class FeedShareActivity extends BaseActivity {
                     .add(R.id.share_videos_container, mVideosFragment)
                     .commitAllowingStateLoss();
             mRoomContentList.clear();
+        } else {
+            if (BuildConfig.DEBUG) {
+                Toast.makeText(this, "You found a bug, RoomContentList is empty!", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -479,14 +495,19 @@ public class FeedShareActivity extends BaseActivity {
                 .remove(mVideosFragment)
                 .commitAllowingStateLoss();
         mVideosFragment = null;
+        mVideoAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
     }
 
     /**
      * 用户离开时移除View
      **/
     private void removeRemoteView(String uid) {
-        FeedShareDataManger.getInstance().getUserRenderView(uid);
         FeedShareDataManger.getInstance().removeUserRenderView(uid);
+        FrameLayout container = mUserIdContainerMap.get(uid);
+        if (container != null) {
+            container.removeAllViews();
+            container.setVisibility(View.GONE);
+        }
     }
 
     /**
@@ -542,7 +563,7 @@ public class FeedShareActivity extends BaseActivity {
             mRemoteUserIds = new ArrayList<>(1);
         }
         mRemoteUserIds.add(userJoinEvent.userId);
-        setRemoteView(userJoinEvent.userId);
+        setRemoteView(userJoinEvent.userId, mRemoteUserIds.size() - 1);
     }
 
     /**
@@ -556,10 +577,7 @@ public class FeedShareActivity extends BaseActivity {
             if (!FeedShareDataManger.getInstance().isHost()) {
                 SafeToast.show(FeedShareActivity.this, "房主已关闭房间", Toast.LENGTH_SHORT);
             }
-            RTCEngine engine = getEngine();
-            if (engine != null) {
-                engine.leaveRoom();
-            }
+            FeedShareRTCManager.getInstance().leaveRoom();
             finish();
         }
     }
@@ -592,18 +610,18 @@ public class FeedShareActivity extends BaseActivity {
         mRoomContentList.addAll(contentUpdateEvent.contentList);
     }
 
+    /**
+     * 通知业务服务器离开房间
+     */
     private void requestLeaveRoom() {
-        FeedShareRTMClient rtmClient = FeedShareRtcManager.getInstance().getRTMClient();
-        if (rtmClient == null) {
+        FeedShareRTSClient rtsClient = FeedShareRTCManager.getInstance().getRTMClient();
+        if (rtsClient == null) {
             return;
         }
         IRequestCallback<Object> callback = new IRequestCallback<Object>() {
             @Override
             public void onSuccess(Object data) {
-                RTCEngine engine = getEngine();
-                if (engine != null) {
-                    engine.leaveRoom();
-                }
+
             }
 
             @Override
@@ -611,6 +629,7 @@ public class FeedShareActivity extends BaseActivity {
                 Log.e(TAG, "finish error msg:" + message + ",code:" + errorCode);
             }
         };
-        rtmClient.leaveRoom(callback);
+        rtsClient.leaveRoom(callback);
+        FeedShareRTCManager.getInstance().leaveRoom();
     }
 }

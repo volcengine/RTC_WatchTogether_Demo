@@ -2,8 +2,8 @@
 //  FeedShareNavView.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/6.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/6.
+//  
 //
 
 #import "FeedShareNavView.h"
@@ -57,7 +57,8 @@
 
 - (void)setTitle:(NSString *)title {
     _title = title;
-    _titleLabel.text = title;
+    
+    _titleLabel.text = [title stringByReplacingOccurrencesOfString:@"feed_" withString:@""];
 }
 
 #pragma mark - actions

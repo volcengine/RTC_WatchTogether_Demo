@@ -2,8 +2,8 @@
 //  FeedShareChatRoomVideoView.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import "FeedShareRoomVideoView.h"
@@ -12,7 +12,7 @@
 @interface FeedShareRoomVideoView ()
 
 @property (nonatomic, strong) UIView *fullView;
-@property (nonatomic, strong) NSArray<UIView *> *viewArray;
+@property (nonatomic, copy) NSArray<UIView *> *viewArray;
 
 @end
 
@@ -54,7 +54,7 @@
 
 - (void)updateVideoViews {
     NSMutableDictionary *dict = [FeedShareRTCManager shareRtc].streamViewDic.mutableCopy;
-    NSString *localViewKey = [NSString stringWithFormat:@"self_%@", [LocalUserComponents userModel].uid];
+    NSString *localViewKey = [LocalUserComponent userModel].uid;
     
     UIView *localVideoView = [dict objectForKey:localViewKey];
     localVideoView.backgroundColor = UIColor.blackColor;

@@ -2,7 +2,7 @@
 //  FeedShareCreateRoomTipView.h
 //  FeedShareDemo
 //
-//  Created by bytedance on 2022/5/5.
+//  Created by on 2022/5/5.
 //
 
 #import <UIKit/UIKit.h>

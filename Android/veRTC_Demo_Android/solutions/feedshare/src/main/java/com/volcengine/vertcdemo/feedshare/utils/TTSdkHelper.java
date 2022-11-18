@@ -10,6 +10,8 @@ import com.ss.ttvideoengine.DataLoaderHelper;
 import com.ss.ttvideoengine.TTVideoEngine;
 import com.ss.ttvideoengine.utils.TTVideoEngineLog;
 import com.ss.video.rtc.demo.basic_module.utils.Utilities;
+import com.volcengine.vertcdemo.feedshare.BuildConfig;
+
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,8 +78,7 @@ public class TTSdkHelper {
         appInfo.put("appid", TT_VIDEO_PLAYER_APP_ID); // your app id
         appInfo.put("appchannel", "xiaomi_appstore"); // 设为test_channel不会展示日志
         appInfo.put("region", "china");
-        // FIXME: 2022/5/20
-//        appInfo.put("appversion", BuildConfig.VERSION_NAME);
+        appInfo.put("appversion", BuildConfig.APP_VERSION_NAME);
         // 初始化点播
         TTVideoEngine.setAppInfo(Utilities.getApplicationContext(), appInfo);
         // 初始化点播依赖的 AppLog SDK

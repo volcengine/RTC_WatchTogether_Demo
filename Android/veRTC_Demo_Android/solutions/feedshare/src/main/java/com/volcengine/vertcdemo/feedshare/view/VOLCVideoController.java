@@ -26,9 +26,9 @@ import android.content.Context;
 import android.util.Log;
 import android.view.Surface;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
-import com.ss.ttm.player.AudioProcessor;
 import com.ss.ttvideoengine.DataLoaderHelper;
 import com.ss.ttvideoengine.Resolution;
 import com.ss.ttvideoengine.SeekCompletionListener;
@@ -56,7 +56,7 @@ public class VOLCVideoController implements VideoController, VideoInfoListener {
 
     private boolean mPrepared;
     private boolean mPlayAfterSurfaceValid;
-    private AudioProcessor mAudioProcessor;
+    private VideoAudioProcessor mAudioProcessor;
 
     private final SeekCompletionListener mSeekCompletionListener = new SeekCompletionListener() {
         @Override
@@ -202,7 +202,7 @@ public class VOLCVideoController implements VideoController, VideoInfoListener {
         this.playListeners.add(listener);
     }
 
-    public void setAudioProcessor(AudioProcessor processor) {
+    public void setAudioProcessor(VideoAudioProcessor processor) {
         mAudioProcessor = processor;
     }
 
@@ -441,6 +441,13 @@ public class VOLCVideoController implements VideoController, VideoInfoListener {
             if (listener != null) {
                 listener.onVideoSeekComplete(success);
             }
+        }
+    }
+
+    public void setMixAudioGain(@IntRange(from = 0, to = 200) int gain) {
+        final VideoAudioProcessor audioProcessor = mAudioProcessor;
+        if (audioProcessor != null) {
+            audioProcessor.setMixAudioGain(gain);
         }
     }
 }

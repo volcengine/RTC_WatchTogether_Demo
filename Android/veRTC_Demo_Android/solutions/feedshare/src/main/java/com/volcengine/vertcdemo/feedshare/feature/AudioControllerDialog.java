@@ -31,9 +31,8 @@ public class AudioControllerDialog extends BaseDialog {
     private AudioChangeListener mListener;
     private int mVideoDefault;
     private int mRtcDefault;
-    private static final int VIDEO_MAX_VALUE = 100;
+    private static final int VIDEO_MAX_VALUE = 200;
     private static final int RTC_MAX_VALUE = 200;
-
 
     public void setVideoDefault(int mVideoDefault) {
         this.mVideoDefault = mVideoDefault;
@@ -125,6 +124,4 @@ public class AudioControllerDialog extends BaseDialog {
             }
         });
     }
-
-
 }

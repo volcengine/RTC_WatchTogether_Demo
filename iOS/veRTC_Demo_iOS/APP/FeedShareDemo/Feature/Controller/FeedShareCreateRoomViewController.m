@@ -2,14 +2,14 @@
 //  FeedSharePreViewViewController.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import "FeedShareCreateRoomViewController.h"
 #import "FeedShareRoomViewController.h"
 
-#import "FeedShareBottomButtonsView.h"
+#import "FeedShareCreateRoomButtonsView.h"
 #import "FeedShareCreateRoomTipView.h"
 
 #import "SystemAuthority.h"
@@ -26,7 +26,7 @@
 @interface FeedShareCreateRoomViewController ()
 <
 UITextFieldDelegate,
-FeedShareBottomButtonsViewDelegate
+FeedShareCreateRoomButtonsViewDelegate
 >
 
 @property (nonatomic, strong) UIView *contentView;
@@ -36,10 +36,10 @@ FeedShareBottomButtonsViewDelegate
 @property (nonatomic, strong) UITextField *roomIdTextField;
 @property (nonatomic, strong) UIImageView *emptImageView;
 @property (nonatomic, strong) UIView *videoView;
-@property (nonatomic, strong) FeedShareBottomButtonsView *buttonsView;
+@property (nonatomic, strong) FeedShareCreateRoomButtonsView *buttonsView;
 @property (nonatomic, strong) FeedShareCreateRoomTipView *tipView;
 
-@property (nonatomic, strong) BytedEffectProtocol *beautyCompoments;
+@property (nonatomic, strong) BytedEffectProtocol *beautyComponent;
 @property (nonatomic, strong) UIView *buttonBackView;
 
 
@@ -51,15 +51,14 @@ FeedShareBottomButtonsViewDelegate
 
 - (instancetype)init {
     if (self = [super init]) {
-        [[FeedShareRTCManager shareRtc] enableLocalVideo:YES];
-        [[FeedShareRTCManager shareRtc] enableLocalAudio:YES];
+        
         
         [[FeedShareMediaModel shared] resetMediaStatus];
         
         /// 第一次进入，使用默认美颜效果
         static dispatch_once_t onceToken;
         dispatch_once(&onceToken, ^{
-            [self.beautyCompoments resetLocalModelArray];
+            [self.beautyComponent resetLocalModelArray];
             [self initTTSDK];
         });
         
@@ -107,12 +106,15 @@ FeedShareBottomButtonsViewDelegate
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor grayColor];
     
-    [self initUIComponents];
+    [self initUIComponent];
     
-    [self.beautyCompoments resumeLocalEffect];
+    [self.beautyComponent resumeLocalEffect];
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardDidShow:) name:UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardDidHide:) name:UIKeyboardWillHideNotification object:nil];
+    
+    [[FeedShareRTCManager shareRtc] enableLocalVideo:YES];
+    [[FeedShareRTCManager shareRtc] enableLocalAudio:YES];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -127,12 +129,6 @@ FeedShareBottomButtonsViewDelegate
     
     self.buttonsView.enableVideo = [FeedShareMediaModel shared].enableVideo;
     self.buttonsView.enableAudio = [FeedShareMediaModel shared].enableAudio;
-}
-
-- (void)viewDidAppear:(BOOL)animated {
-    [super viewDidAppear:animated];
-    
-    [self authorizationStatusMicAndCamera];
 }
 
 - (void)viewWillDisappear:(BOOL)animated {
@@ -171,16 +167,16 @@ FeedShareBottomButtonsViewDelegate
 }
 
 - (void)onClickEnterRoom:(UIButton *)sender {
-    
     NSString *roomID = self.roomIdTextField.text;
-    [PublicParameterCompoments share].roomId = roomID;
     
-    if (roomID.length <= 0 || ![LocalUserComponents isMatchRoomID:roomID]) {
+    if (roomID.length <= 0 || ![LocalUserComponent isMatchRoomID:roomID]) {
         return;
     }
     
+    roomID = [NSString stringWithFormat:@"feed_%@", self.roomIdTextField.text];
+    [PublicParameterComponent share].roomId = roomID;
     [self.view endEditing:YES];
-    sender.userInteractionEnabled = NO;
+    [[ToastComponent shareToastComponent] showLoading];
     
     __weak typeof(self) weakSelf = self;
     [FeedShareRTMManager clearUser:^(RTMACKModel * _Nonnull model) {
@@ -190,17 +186,16 @@ FeedShareBottomButtonsViewDelegate
                 [weakSelf jumpToRoomViewController:roomModel];
             }
             else if (model.code == 414) {
-                [[ToastComponents shareToastComponents] showWithMessage:@"该用户已存在房间中"];
+                [[ToastComponent shareToastComponent] showWithMessage:@"该用户已存在房间中"];
             }
             else if (model.code == 507) {
-                [[ToastComponents shareToastComponents] showWithMessage:@"房间人数已满"];
+                [[ToastComponent shareToastComponent] showWithMessage:@"房间人数已满"];
             }
             else {
-                [[ToastComponents shareToastComponents] showWithMessage:model.message];
+                [[ToastComponent shareToastComponent] showWithMessage:model.message];
             }
 
-            sender.userInteractionEnabled = YES;
-            
+            [[ToastComponent shareToastComponent] dismiss];
         }];
     }];
     
@@ -208,7 +203,7 @@ FeedShareBottomButtonsViewDelegate
 
 - (void)jumpToRoomViewController:(FeedShareRoomModel *)roomModel {
     
-    [[FeedShareRTCManager shareRtc] joinChannelWithToken:roomModel.rtcToken roomID:roomModel.roomID uid:[LocalUserComponents userModel].uid];
+    [[FeedShareRTCManager shareRtc] joinChannelWithToken:roomModel.rtcToken roomID:roomModel.roomID uid:[LocalUserComponent userModel].uid];
     
     FeedShareRoomViewController *roomViewController = [[FeedShareRoomViewController alloc] initWithRoomModel:roomModel];
     
@@ -245,7 +240,7 @@ FeedShareBottomButtonsViewDelegate
     
     [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(dismissErrorLabel:) object:textField];
     BOOL isIllegal = NO;
-    isIllegal = ![LocalUserComponents isMatchRoomID:textField.text];
+    isIllegal = ![LocalUserComponent isMatchRoomID:textField.text];
     if (isIllegal || isExceedMaximLength) {
         if (isIllegal) {
             message = @"请输入数字、英文字母或符号@_-";
@@ -270,8 +265,8 @@ FeedShareBottomButtonsViewDelegate
     label.text = @"";
 }
 
-#pragma mark - FeedShareBottomButtonsViewDelegate
-- (void)feedShareBottomButtonsView:(FeedShareBottomButtonsView *)view didClickButtonType:(FeedShareButtonType)type {
+#pragma mark - FeedShareCreateRoomButtonsViewDelegate
+- (void)feedShareCreateRoomButtonsView:(FeedShareCreateRoomButtonsView *)view didClickButtonType:(FeedShareButtonType)type {
     switch (type) {
         case FeedShareButtonTypeAudio: {
             if (![FeedShareMediaModel shared].audioPermissionDenied) {
@@ -314,14 +309,14 @@ FeedShareBottomButtonsViewDelegate
             break;
             
         case FeedShareButtonTypeBeauty: {
-            if (self.beautyCompoments) {
+            if (self.beautyComponent) {
                 self.contentView.hidden = YES;
                 __weak __typeof(self) wself = self;
-                [self.beautyCompoments showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
+                [self.beautyComponent showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
                     wself.contentView.hidden = NO;
                 }];
             } else {
-                [[ToastComponents shareToastComponents] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
+                [[ToastComponent shareToastComponent] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
             }
         }
             break;
@@ -346,6 +341,7 @@ FeedShareBottomButtonsViewDelegate
     label.tag = tag;
     label.text = @"";
     label.textColor = [UIColor colorFromHexString:@"#F53F3F"];
+    label.font = [UIFont systemFontOfSize:14];
     [self.view addSubview:label];
     [label mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(view);
@@ -353,7 +349,7 @@ FeedShareBottomButtonsViewDelegate
     }];
 }
 
-- (void)initUIComponents {
+- (void)initUIComponent {
     [self.view addSubview:self.videoView];
     [self.videoView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.edges.equalTo(self.view);
@@ -396,12 +392,12 @@ FeedShareBottomButtonsViewDelegate
     [self.buttonBackView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(self.contentView);
         make.bottom.equalTo(self.enterRoomBtn.mas_top).offset(-7);
-        make.size.mas_equalTo(CGSizeMake(267, 155));
+        make.size.mas_equalTo(CGSizeMake(267, 175));
     }];
     
     [self.contentView addSubview:self.buttonsView];
     [self.buttonsView mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.left.right.equalTo(self.contentView);
+        make.centerX.equalTo(self.contentView);
         make.bottom.equalTo(self.buttonBackView).offset(-20);
     }];
     
@@ -423,26 +419,6 @@ FeedShareBottomButtonsViewDelegate
     [FeedShareMediaModel shared].enableVideo = isEnableVideo;
     self.buttonsView.enableAudio = isEnableAudio;
     [FeedShareMediaModel shared].enableAudio = isEnableAudio;
-    [self authorizationStatusMicAndCamera];
-}
-
-- (void)authorizationStatusMicAndCamera {
-    [SystemAuthority authorizationStatusWithType:AuthorizationTypeAudio block:^(BOOL isAuthorize) {
-        if (!isAuthorize) {
-            self.buttonsView.enableAudio = NO;
-            [FeedShareMediaModel shared].enableAudio = NO;
-            [FeedShareMediaModel shared].audioPermissionDenied = YES;
-        }
-    }];
-    
-    [SystemAuthority authorizationStatusWithType:AuthorizationTypeCamera block:^(BOOL isAuthorize) {
-        if (!isAuthorize) {
-            self.emptImageView.hidden = NO;
-            self.buttonsView.enableVideo = NO;
-            [FeedShareMediaModel shared].enableVideo = NO;
-            [FeedShareMediaModel shared].videoPermissionDenied = YES;
-        }
-    }];
 }
 
 - (void)closeButtonClick {
@@ -537,23 +513,22 @@ FeedShareBottomButtonsViewDelegate
 
 - (void)dealloc {
     [[FeedShareRTCManager shareRtc] disconnect];
-    [PublicParameterCompoments clear];
+    [PublicParameterComponent clear];
 }
 
-- (FeedShareBottomButtonsView *)buttonsView {
+- (FeedShareCreateRoomButtonsView *)buttonsView {
     if (!_buttonsView) {
-        _buttonsView = [[FeedShareBottomButtonsView alloc] init];
-        _buttonsView.type = FeedShareButtonViewTypePreView;
+        _buttonsView = [[FeedShareCreateRoomButtonsView alloc] init];
         _buttonsView.delegate = self;
     }
     return _buttonsView;
 }
 
-- (BytedEffectProtocol *)beautyCompoments {
-    if (!_beautyCompoments) {
-        _beautyCompoments = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
+- (BytedEffectProtocol *)beautyComponent {
+    if (!_beautyComponent) {
+        _beautyComponent = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
     }
-    return _beautyCompoments;
+    return _beautyComponent;
 }
 
 - (UIButton *)closeButton {

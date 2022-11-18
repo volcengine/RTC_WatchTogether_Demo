@@ -2,8 +2,8 @@
 //  NetworkingManager.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2021/12/16.
-//  Copyright © 2021 bytedance. All rights reserved.
+//  Created by on 2021/12/16.
+//  
 //
 
 #import <AFNetworking/AFNetworking.h>
@@ -52,44 +52,16 @@
     [self postWithEventName:@"changeUserName" content:content block:block];
 }
 
-#pragma mark - SetAppInfo
-
-+ (void)setAppInfoWithAppId:(NSDictionary *)dic
-                      block:(void (^ __nullable)(NetworkingResponse *response))block {
-    NSString *appId = [NSString stringWithFormat:@"%@", dic[@"appId"]];
-    NSString *appKey = [NSString stringWithFormat:@"%@", dic[@"appKey"]];
-    NSString *volcAk = [NSString stringWithFormat:@"%@", dic[@"volcAk"]];
-    NSString *volcSk = [NSString stringWithFormat:@"%@", dic[@"volcSk"]];
-    NSString *volcAccountID = [NSString stringWithFormat:@"%@", dic[@"volcAccountID"]];
-    NSString *vodSpace = [NSString stringWithFormat:@"%@", dic[@"vodSpace"]];
-    NSString *scenesName = [NSString stringWithFormat:@"%@", dic[@"scenesName"]];
-    NSString *loginToken = [NSString stringWithFormat:@"%@", dic[@"loginToken"]];
-    NSString *contentPartner = [NSString stringWithFormat:@"%@", dic[@"contentPartner"]];
-    NSString *contentCategory = [NSString stringWithFormat:@"%@", dic[@"contentCategory"]];
-
-    NSDictionary *content = @{@"app_id" : appId ?: @"",
-                              @"app_key" : appKey ?: @"",
-                              @"volc_ak" : volcAk ?: @"",
-                              @"volc_sk" : volcSk ?: @"",
-                              @"account_id" : volcAccountID ?: @"",
-                              @"vod_space" : vodSpace ?: @"",
-                              @"scenes_name" : scenesName ?: @"",
-                              @"login_token" : loginToken ?: @"",
-                              @"content_partner" : contentPartner ?: @"",
-                              @"content_category" : contentCategory ?: @""};
-    [self postWithEventName:@"setAppInfo" content:content block:block];
-}
-
 #pragma mark -
 
 + (void)postWithEventName:(NSString *)eventName
                   content:(NSDictionary *)content
                     block:(void (^ __nullable)(NetworkingResponse *response))block {
-    NSString *appid = [PublicParameterCompoments share].appId;
+    NSString *appid = [PublicParameterComponent share].appId;
     NSDictionary *parameters = @{@"event_name" : eventName ?: @"",
                                  @"content" : [content yy_modelToJSONString] ?: @{},
                                  @"device_id" : [NetworkingTool getDeviceId] ?: @"",
-                                 @"app_id" : appid ? appid : @""};
+                                 @"app_id" : appid ?: @""};
     [[self shareManager].sessionManager POST:LoginUrl
                                   parameters:parameters
                                      headers:nil

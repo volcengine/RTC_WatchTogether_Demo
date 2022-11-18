@@ -2,8 +2,8 @@
 //  FeedShareBottomButtonsView.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import "FeedShareBottomButtonsView.h"
@@ -17,7 +17,7 @@
 @property (nonatomic, strong) UIButton *beautyButton;
 @property (nonatomic, strong) UIButton *watchButton;
 @property (nonatomic, strong) UIButton *settingButton;
-
+@property (nonatomic, strong) UIActivityIndicatorView *indicatorView;
 
 @end
 
@@ -72,6 +72,16 @@
         }];
         [self.stackView addArrangedSubview:button];
     }
+    
+    [self.watchButton addSubview:self.indicatorView];
+    [self.indicatorView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.equalTo(self.watchButton);
+    }];
+}
+
+- (void)setIsLoading:(BOOL)isLoading {
+    _isLoading = isLoading;
+    [self updateWatchButtonLoading:isLoading];
 }
 
 - (void)updateButtonColor:(UIButton *)button {
@@ -129,6 +139,18 @@
     self.videoButton.selected = !enableVideo;
 }
 
+#pragma mark - Private Action
+
+- (void)updateWatchButtonLoading:(BOOL)isLoading {
+    if (isLoading) {
+        [self.indicatorView startAnimating];
+        [self.watchButton setImage:nil forState:UIControlStateNormal];
+    } else {
+        [self.indicatorView stopAnimating];
+        [self.watchButton setImage:[UIImage imageNamed:@"feed_share_watch" bundleName:HomeBundleName] forState:UIControlStateNormal];
+    }
+}
+
 #pragma mark - getter
 
 - (UIStackView *)stackView {
@@ -139,6 +161,15 @@
         _stackView.spacing = 60;
     }
     return _stackView;
+}
+
+- (UIActivityIndicatorView *)indicatorView {
+    if (_indicatorView == nil) {
+        _indicatorView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite];
+        _indicatorView.backgroundColor = [UIColor clearColor];
+        _indicatorView.hidesWhenStopped = YES;
+    }
+    return _indicatorView;
 }
 
 @end

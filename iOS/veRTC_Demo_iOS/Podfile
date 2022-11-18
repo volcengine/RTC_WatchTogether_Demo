@@ -2,7 +2,7 @@ source 'https://cdn.cocoapods.org/'
 source 'https://github.com/volcengine/volcengine-specs.git'
 
 # RTC SDK
-pod 'VolcEngineRTC', '~> 3.41.101'
+pod 'VolcEngineRTC', '3.46.103'
 
 target 'veRTC_Demo' do
   platform :ios, '12.0'
@@ -13,15 +13,29 @@ target 'veRTC_Demo' do
   pod 'AFNetworking', '~> 4.0'
   
   # 基础组件
-  # Basic components
+  # Basic Component
   pod 'Core', :path => '../veRTC_Demo_iOS/Core'
-
   # 场景化源码
   # Scene source code
   # 登录
   pod 'Login', :path => '../veRTC_Demo_iOS/APP/Login'
 
+  # 获取 RTS 登录信息
+  pod 'JoinRTSParams', :path => '../veRTC_Demo_iOS/APP/JoinRTSParams'
+
   # 一起看
   pod 'FeedShareDemo', :path => '../veRTC_Demo_iOS/APP/FeedShareDemo'
+  pod 'WatchBase', :path => '../veRTC_Demo_iOS/APP/WatchBase'
+  
+  post_install do |installer|
+    installer.generated_projects.each do |project|
+      project.targets.each do |target|
+        target.build_configurations.each do |config|
+          config.build_settings['CODE_SIGN_IDENTITY'] = ''
+        end
+      end
+    end
+  end
 
+  
 end

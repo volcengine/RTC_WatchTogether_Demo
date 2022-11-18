@@ -4,11 +4,12 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.ss.bytertc.engine.RTCEngine;
+import com.ss.bytertc.engine.RTCVideo;
 import com.volcengine.vertcdemo.feedshare.R;
 import com.volcengine.vertcdemo.feedshare.bean.DeviceStatusRecord;
 
 public class MicCameraSwitchHelper {
-    private RTCEngine mEngine;
+    private RTCVideo mEngine;
     private ImageView mMicBtn;
     private ImageView mCameraBtn;
     private View mStatusView;
@@ -19,7 +20,7 @@ public class MicCameraSwitchHelper {
         this.device = DeviceStatusRecord.device;
     }
 
-    public void setEngine(RTCEngine mEngine) {
+    public void setEngine(RTCVideo mEngine) {
         this.mEngine = mEngine;
     }
 

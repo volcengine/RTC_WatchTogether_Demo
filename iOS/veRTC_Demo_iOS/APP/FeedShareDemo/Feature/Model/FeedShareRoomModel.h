@@ -2,8 +2,8 @@
 //  FeedShareRoomModel.h
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import <Foundation/Foundation.h>
@@ -24,7 +24,7 @@ typedef NS_ENUM(NSInteger, FeedShareRoomStatus) {
 @property (nonatomic, copy) NSString *hostName;
 @property (nonatomic, assign) FeedShareRoomStatus roomStatus;
 @property (nonatomic, copy) NSString *rtcToken;
-@property (nonatomic, strong) NSArray<FeedShareVideoModel *> *videoList;
+@property (nonatomic, copy) NSArray<FeedShareVideoModel *> *videoList;
 
 
 @end

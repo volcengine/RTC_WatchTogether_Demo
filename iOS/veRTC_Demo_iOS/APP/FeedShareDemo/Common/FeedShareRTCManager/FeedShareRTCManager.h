@@ -2,8 +2,8 @@
 //  FeedShareRTCManager.h
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import <Foundation/Foundation.h>
@@ -115,6 +115,11 @@ typedef void(^FeedShareNetworkQualityChangeBlock)(FeedShareNetworkQualityStatus 
  * Bind the stream to render the view
  */
 - (void)bingCanvasViewToUid:(NSString *)uid;
+
+/*
+ * Update close video user canvas
+ */
+- (void)updateStopVideoUserCanvas;
 
 #pragma mark - NetworkQuality
 

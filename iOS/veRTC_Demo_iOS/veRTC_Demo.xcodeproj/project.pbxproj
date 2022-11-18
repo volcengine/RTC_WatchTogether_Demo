@@ -78,6 +78,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		11DCCAECB45A2E375C40F4BD /* libPods-MeetingScreenShare.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-MeetingScreenShare.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		2B1FCC7226FB1894004E286C /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		2B1FCC7426FB18A1004E286C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		2B1FCC7626FB18A8004E286C /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
@@ -127,9 +128,11 @@
 		2BEA42A22499BDEE001C0A2D /* veRTC_DemoUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = veRTC_DemoUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		2BEFEB3026DC8734007B6C83 /* ReplayKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = ReplayKit.framework; path = System/Library/Frameworks/ReplayKit.framework; sourceTree = SDKROOT; };
 		2BEFEB3226DC8739007B6C83 /* VideoToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = VideoToolbox.framework; path = System/Library/Frameworks/VideoToolbox.framework; sourceTree = SDKROOT; };
+		3B5394BE38D59F0574C2CF51 /* Pods-MeetingScreenShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingScreenShare.debug.xcconfig"; path = "Target Support Files/Pods-MeetingScreenShare/Pods-MeetingScreenShare.debug.xcconfig"; sourceTree = "<group>"; };
 		911A93E9E910D87F089E43EE /* Pods-veRTC_Demo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-veRTC_Demo.debug.xcconfig"; path = "Target Support Files/Pods-veRTC_Demo/Pods-veRTC_Demo.debug.xcconfig"; sourceTree = "<group>"; };
 		A627BAB67CAF5B239A99AFAE /* Pods-veRTC_Demo.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-veRTC_Demo.release.xcconfig"; path = "Target Support Files/Pods-veRTC_Demo/Pods-veRTC_Demo.release.xcconfig"; sourceTree = "<group>"; };
 		B8D77B4008564196D8535646 /* Pods-veRTC_Demo-MeetingScreenShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-veRTC_Demo-MeetingScreenShare.release.xcconfig"; path = "Target Support Files/Pods-veRTC_Demo-MeetingScreenShare/Pods-veRTC_Demo-MeetingScreenShare.release.xcconfig"; sourceTree = "<group>"; };
+		DAD0F66B59B4F4EC70CDA500 /* Pods-MeetingScreenShare.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MeetingScreenShare.release.xcconfig"; path = "Target Support Files/Pods-MeetingScreenShare/Pods-MeetingScreenShare.release.xcconfig"; sourceTree = "<group>"; };
 		F29B93F04D95B33F9E2EF9BF /* Pods-veRTC_Demo-MeetingScreenShare.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-veRTC_Demo-MeetingScreenShare.debug.xcconfig"; path = "Target Support Files/Pods-veRTC_Demo-MeetingScreenShare/Pods-veRTC_Demo-MeetingScreenShare.debug.xcconfig"; sourceTree = "<group>"; };
 		F9838313799F8FF1200A6EDB /* libPods-veRTC_Demo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-veRTC_Demo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -294,6 +297,8 @@
 				A627BAB67CAF5B239A99AFAE /* Pods-veRTC_Demo.release.xcconfig */,
 				F29B93F04D95B33F9E2EF9BF /* Pods-veRTC_Demo-MeetingScreenShare.debug.xcconfig */,
 				B8D77B4008564196D8535646 /* Pods-veRTC_Demo-MeetingScreenShare.release.xcconfig */,
+				3B5394BE38D59F0574C2CF51 /* Pods-MeetingScreenShare.debug.xcconfig */,
+				DAD0F66B59B4F4EC70CDA500 /* Pods-MeetingScreenShare.release.xcconfig */,
 			);
 			path = Pods;
 			sourceTree = "<group>";
@@ -314,6 +319,7 @@
 				2BEFEB3026DC8734007B6C83 /* ReplayKit.framework */,
 				F9838313799F8FF1200A6EDB /* libPods-veRTC_Demo.a */,
 				2B34BDF52840F88800E85418 /* UIKit.framework */,
+				11DCCAECB45A2E375C40F4BD /* libPods-MeetingScreenShare.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -731,7 +737,6 @@
 					"$(SRCROOT)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"\"$(PROJECT_DIR)/libyuv-iOS/headers\"",
 					"$(inherited)",
 					"\"${PODS_ROOT}/Headers/Public\"",
 					"\"${PODS_ROOT}/Headers/Public/Masonry\"",
@@ -746,9 +751,8 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/libyuv-iOS/lib",
 				);
-				MARKETING_VERSION = 9.1.0.5;
+				MARKETING_VERSION = 12.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = vertc.veRTCDemo.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = veRTC_Development_20211117;
@@ -778,7 +782,6 @@
 					"$(SRCROOT)",
 				);
 				HEADER_SEARCH_PATHS = (
-					"\"$(PROJECT_DIR)/libyuv-iOS/headers\"",
 					"$(inherited)",
 					"\"${PODS_ROOT}/Headers/Public\"",
 					"\"${PODS_ROOT}/Headers/Public/Masonry\"",
@@ -793,9 +796,8 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)",
-					"$(PROJECT_DIR)/libyuv-iOS/lib",
 				);
-				MARKETING_VERSION = 9.1.0.5;
+				MARKETING_VERSION = 12.0.2;
 				PRODUCT_BUNDLE_IDENTIFIER = rtc.veRTCDemo.ios;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = VERTCDemoInHouseDist;

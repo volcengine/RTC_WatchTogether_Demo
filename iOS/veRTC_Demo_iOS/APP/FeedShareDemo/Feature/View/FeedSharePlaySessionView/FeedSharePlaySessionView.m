@@ -2,8 +2,8 @@
 //  FeedSharePlaySessionView.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/6.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/6.
+//  
 //
 
 #import "FeedSharePlaySessionView.h"

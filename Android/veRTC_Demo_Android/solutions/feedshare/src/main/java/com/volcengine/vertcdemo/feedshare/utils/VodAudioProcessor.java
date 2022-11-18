@@ -1,6 +1,9 @@
 package com.volcengine.vertcdemo.feedshare.utils;
 
+import androidx.annotation.IntRange;
+
 import com.ss.bytertc.engine.RTCEngine;
+import com.ss.bytertc.engine.RTCVideo;
 import com.ss.bytertc.engine.audio.IAudioMixingManager;
 import com.ss.bytertc.engine.data.AudioChannel;
 import com.ss.bytertc.engine.data.AudioMixingType;
@@ -11,17 +14,23 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class VodAudioProcessor {
-    public static volatile int mixAudioGain = 100; // 0~100
+
+    public static final int DEFAULT_VIDEO_AUDIO_GAIN = 20;
+    public static final int DEFAULT_RTC_AUDIO_GAIN = 100;
+
+    @IntRange(from = 0, to = 200)
+    private int mixAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
+
     private int mChannelCount;
     private int mSampleRate;
-    private RTCEngine mEngine;
+    private RTCVideo mEngine;
     private IAudioMixingManager mixAudioManager;
     private ByteBuffer mRTCBuffer;
 
-    public VodAudioProcessor(RTCEngine engine) {
+    public VodAudioProcessor(RTCVideo engine) {
         mEngine = engine;
         mixAudioManager = mEngine.getAudioMixingManager();
-        mixAudioManager.enableAudioMixingFrame(0,AudioMixingType.AUDIO_MIXING_TYPE_PLAYOUT);
+        mixAudioManager.enableAudioMixingFrame(0, AudioMixingType.AUDIO_MIXING_TYPE_PLAYOUT);
     }
 
     public void audioOpen(int sampleRate, int channelCount) {
@@ -60,9 +69,13 @@ public class VodAudioProcessor {
         AudioSampleRate sampleRate = getAudioSampleRate(mSampleRate);
         AudioFrame frame = new AudioFrame(mRTCBuffer.array(), samples, sampleRate, channel);
         if (mixAudioManager != null) {
-            mixAudioManager.setAudioMixingVolume(0, mixAudioGain, AudioMixingType.AUDIO_MIXING_TYPE_PLAYOUT_AND_PUBLISH);
+            mixAudioManager.setAudioMixingVolume(0, mixAudioGain, AudioMixingType.AUDIO_MIXING_TYPE_PLAYOUT);
             mixAudioManager.pushAudioMixingFrame(0, frame);
         }
+    }
+
+    public void setMixAudioGain(@IntRange(from = 0, to = 200) int gain) {
+        mixAudioGain = gain;
     }
 
     /*

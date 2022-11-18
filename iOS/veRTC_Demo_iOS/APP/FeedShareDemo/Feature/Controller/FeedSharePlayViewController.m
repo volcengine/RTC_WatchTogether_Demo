@@ -2,8 +2,8 @@
 //  FeedSharePlayViewController.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/6.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/6.
+//  
 //
 
 #import "FeedSharePlayViewController.h"
@@ -15,7 +15,7 @@
 #import "FeedShareRoomModel.h"
 #import "FeedShareRTCManager.h"
 #import "SystemAuthority.h"
-#import "FeedSharePlayCompoments.h"
+#import "FeedSharePlayComponent.h"
 #import "FeedShareMessageComponent.h"
 #import "FeedShareMediaModel.h"
 #import "FeedShareRTMManager.h"
@@ -31,8 +31,8 @@
 @property (nonatomic, strong) FeedShareBottomButtonsView *buttonsView;
 @property (nonatomic, strong) FeedSharePlayVolumeView *volumeView;
 
-@property (nonatomic, strong) BytedEffectProtocol *beautyCompoments;
-@property (nonatomic, strong) FeedSharePlayCompoments *playCompoments;
+@property (nonatomic, strong) BytedEffectProtocol *beautyComponent;
+@property (nonatomic, strong) FeedSharePlayComponent *playComponent;
 
 @end
 
@@ -53,12 +53,13 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.view.backgroundColor = [UIColor grayColor];
+    
     [self setupViews];
     
     [self enableVideoEngineStategy];
     
     // resume local render effect
-    [self.beautyCompoments resumeLocalEffect];
+    [self.beautyComponent resumeLocalEffect];
     
     [[FeedShareRTCManager shareRtc] startAudioMixing];
 }
@@ -81,6 +82,7 @@
     }];
     
     
+    [[FeedShareRTCManager shareRtc] updateStopVideoUserCanvas];
     // show local render view
     [self.sessionView updateVideoViews];
 }
@@ -89,6 +91,8 @@
     [super viewWillDisappear:animated];
     [FeedShareMediaModel shared].enableVideo = self.buttonsView.enableVideo;
     [FeedShareMediaModel shared].enableAudio = self.buttonsView.enableAudio;
+    
+    [[FeedShareRTCManager shareRtc] updateStopVideoUserCanvas];
 }
 
 #pragma mark - FeedShareBottomButtonsViewDelegate
@@ -132,12 +136,12 @@
             break;
             
         case FeedShareButtonTypeBeauty: {
-            if (self.beautyCompoments) {
-                [self.beautyCompoments showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
+            if (self.beautyComponent) {
+                [self.beautyComponent showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
                     
                 }];
             } else {
-                [[ToastComponents shareToastComponents] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
+                [[ToastComponent shareToastComponent] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
             }
         }
             break;
@@ -167,8 +171,8 @@
 #pragma mark - Methods
 - (void)setupViews {
     
-    [self.view addSubview:self.playCompoments.tableView];
-    [self.playCompoments.tableView mas_makeConstraints:^(MASConstraintMaker *make) {
+    [self.view addSubview:self.playComponent.tableView];
+    [self.playComponent.tableView mas_makeConstraints:^(MASConstraintMaker *make) {
         make.edges.equalTo(self.view);
     }];
 
@@ -191,24 +195,24 @@
 }
 
 - (void)updateVideoList:(NSArray<FeedShareVideoModel *> *)videoList {
-    [self.playCompoments updateVideoList:videoList];
+    [self.playComponent updateVideoList:videoList];
 }
 
 - (BOOL)isHost {
-    return [self.roomModel.hostUid isEqualToString:[LocalUserComponents userModel].uid];
+    return [self.roomModel.hostUid isEqualToString:[LocalUserComponent userModel].uid];
 }
 
 #pragma mark - actions
 - (void)quitButtonClick {
     
-    [self.playCompoments destroy];
+    [self.playComponent destroy];
     
     [self updateRoomState];
     
     if ([self isHost]) {
         [FeedShareRTMManager requestChangeRoomScene:FeedShareRoomStatusChat roomID:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
             if (!model.result) {
-                [[ToastComponents shareToastComponents] showWithMessage:model.message];
+                [[ToastComponent shareToastComponent] showWithMessage:model.message];
             }
         }];
         [self clearAllEngineStrategy];
@@ -218,7 +222,7 @@
     else {
         [FeedShareRTMManager requestLeaveRoom:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
             if (!model.result) {
-                [[ToastComponents shareToastComponents] showWithMessage:model.message];
+                [[ToastComponent shareToastComponent] showWithMessage:model.message];
             }
         }];
         [self clearAllEngineStrategy];
@@ -227,13 +231,13 @@
 }
 
 - (void)popToRoomViewController {
-    [self.playCompoments destroy];
+    [self.playComponent destroy];
     
     [self.navigationController popViewControllerAnimated:YES];
 }
 
 - (void)popToCreateRoomViewController {
-    [self.playCompoments destroy];
+    [self.playComponent destroy];
     [[FeedShareRTCManager shareRtc] leaveChannel];
     
     UIViewController *jumpVC = nil;
@@ -250,13 +254,17 @@
     }
 }
 
+- (void)destroy {
+    [self.playComponent destroy];
+}
+
 #pragma mark - getter
 
-- (BytedEffectProtocol *)beautyCompoments {
-    if (!_beautyCompoments) {
-        _beautyCompoments = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
+- (BytedEffectProtocol *)beautyComponent {
+    if (!_beautyComponent) {
+        _beautyComponent = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
     }
-    return _beautyCompoments;
+    return _beautyComponent;
 }
 
 - (FeedShareBottomButtonsView *)buttonsView {
@@ -287,11 +295,11 @@
     return _sessionView;
 }
 
-- (FeedSharePlayCompoments *)playCompoments {
-    if (!_playCompoments) {
-        _playCompoments = [[FeedSharePlayCompoments alloc] initWithRoomModel:self.roomModel];
+- (FeedSharePlayComponent *)playComponent {
+    if (!_playComponent) {
+        _playComponent = [[FeedSharePlayComponent alloc] initWithRoomModel:self.roomModel];
     }
-    return _playCompoments;
+    return _playComponent;
 }
 
 - (FeedSharePlayVolumeView *)volumeView {

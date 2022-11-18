@@ -2,7 +2,7 @@
 //  VideoAudioProcesser.h
 //  ByteRTC
 //
-//  Created by bytedance on 2022/2/10.
+//  Created by on 2022/2/10.
 //
 
 #import <Foundation/Foundation.h>

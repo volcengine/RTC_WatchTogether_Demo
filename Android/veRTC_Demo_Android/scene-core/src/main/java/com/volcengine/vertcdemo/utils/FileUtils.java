@@ -2,6 +2,7 @@ package com.volcengine.vertcdemo.utils;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -12,6 +13,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 public class FileUtils {
+    private static final String TAG = "FileUtils";
 
     public static boolean copyAssetFolder(Context context, String srcName, String dstName) {
         try {
@@ -30,7 +32,7 @@ public class FileUtils {
             }
             return result;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, "copyAssetFolder failed srcName:" + srcName + ",msg:" + e.getLocalizedMessage());
             return false;
         }
     }
@@ -45,7 +47,7 @@ public class FileUtils {
             }
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, "copyAssetFile failed srcName:" + srcName + ",msg:" + e.getLocalizedMessage());
             return false;
         }
     }

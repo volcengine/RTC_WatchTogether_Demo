@@ -13,7 +13,6 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
 
-        buildConfigField('boolean', 'IS_TEST', project.IS_TEST_ENV)
         buildConfigField('String', 'APP_VERSION_NAME', "\"${project.APP_VERSION_NAME}\"")
 
         ensureProperty('FEED_SHARE_CONTENT_PARTNER')
@@ -60,8 +59,8 @@ dependencies {
     implementation('com.bytedanceapi:ttsdk-player_premium:1.25.2.106') {
         exclude group: 'com.bytedanceapi', module: 'ttsdk-ttrtcbase'
     }
-
     implementation project(":scene-core")
+    implementation project(":component:$project.JOIN_RTS_MODULE")
 
     implementation "org.greenrobot:eventbus:$EventBusVersion"
     implementation "com.google.code.gson:gson:$GsonVersion"

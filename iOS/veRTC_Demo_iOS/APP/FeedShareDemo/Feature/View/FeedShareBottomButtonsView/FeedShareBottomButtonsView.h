@@ -2,8 +2,8 @@
 //  FeedShareBottomButtonsView.h
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import <UIKit/UIKit.h>
@@ -38,6 +38,7 @@ typedef NS_ENUM(NSInteger, FeedShareButtonViewType) {
 
 @property (nonatomic, assign) BOOL enableAudio;
 @property (nonatomic, assign) BOOL enableVideo;
+@property (nonatomic, assign) BOOL isLoading;
 
 @end
 

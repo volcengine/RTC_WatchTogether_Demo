@@ -9,6 +9,7 @@
             android:exported="false"
             android:icon="@drawable/ic_feed_share"
             android:label="@string/scene_feed_share"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
             tools:ignore="IntentFilterExportedReceiver">
             <intent-filter>
@@ -20,16 +21,13 @@
             <meta-data
                 android:name="scene_name_abbr"
                 android:value="tw" />
-
-            <meta-data
-                android:name="scene_sort"
-                android:value="10" />
         </activity>
         <activity
             android:name=".feature.preview.PreviewActivity"
             android:screenOrientation="portrait" />
         <activity
             android:name=".feature.feedshare.FeedShareActivity"
+            android:keepScreenOn="true"
             android:screenOrientation="portrait" />
     </application>
 

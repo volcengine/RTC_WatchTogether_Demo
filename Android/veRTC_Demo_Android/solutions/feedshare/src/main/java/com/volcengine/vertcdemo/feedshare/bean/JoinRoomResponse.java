@@ -3,13 +3,13 @@ package com.volcengine.vertcdemo.feedshare.bean;
 import androidx.annotation.IntDef;
 
 import com.google.gson.annotations.SerializedName;
-import com.volcengine.vertcdemo.core.net.rtm.RTMBizResponse;
+import com.volcengine.vertcdemo.core.net.rts.RTSBizResponse;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
-public class JoinRoomResponse implements RTMBizResponse {
+public class JoinRoomResponse implements RTSBizResponse {
 
     public static final int FEED_SHARE_ROOM_SCENE_CHAT = 1;
     public static final int FEED_SHARE_ROOM_SCENE_FEED_SHARE = 2;

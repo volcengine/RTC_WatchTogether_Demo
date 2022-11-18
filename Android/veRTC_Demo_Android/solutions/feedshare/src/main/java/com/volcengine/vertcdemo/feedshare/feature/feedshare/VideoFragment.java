@@ -13,6 +13,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -28,8 +29,9 @@ import com.volcengine.vertcdemo.core.net.IRequestCallback;
 import com.volcengine.vertcdemo.feedshare.R;
 import com.volcengine.vertcdemo.feedshare.utils.WeakHandler;
 import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRTMClient;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRtcManager;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTSClient;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTCManager;
+import com.volcengine.vertcdemo.feedshare.view.VideoController;
 import com.volcengine.vertcdemo.feedshare.view.pager.CustomRecyclerView;
 import com.volcengine.vertcdemo.feedshare.view.pager.PagerLayoutManager;
 import com.volcengine.vertcdemo.feedshare.view.pager.RecyclerViewPagerListener;
@@ -130,7 +132,7 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
         info.progress = progress;
         info.status = status;
         String msg = SyncMessageUtil.createVideoStatusMessage(info);
-        FeedShareRtcManager.getInstance().sendRoomMessage(msg);
+        FeedShareRTCManager.getInstance().sendRoomMessage(msg);
     }
 
     private final WeakHandler mSyncWeakHandler = new WeakHandler(Looper.getMainLooper(), this);
@@ -158,7 +160,7 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FeedShareRtcManager.getInstance().addSyncHandler(mVideoSyncHandler);
+        FeedShareRTCManager.getInstance().addSyncHandler(mVideoSyncHandler);
         mAdapter = new BaseAdapter<VideoItem>(new ArrayList<>()) {
             @Override
             public int getLayoutId(final int viewType) {
@@ -171,7 +173,7 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
                 VOLCVideoView videoView = holder.getView(R.id.video_view);
                 VOLCVideoController controller = new VOLCVideoController(videoView.getContext(), data, videoView);
                 controller.addPlayListener(mPlayListenerForSync);
-                VideoAudioProcessor processor = new VideoAudioProcessor(FeedShareRtcManager.getInstance().getEngine());
+                VideoAudioProcessor processor = new VideoAudioProcessor(FeedShareRTCManager.getInstance().getEngine());
                 controller.setAudioProcessor(processor);
                 videoView.setVideoController(controller);
                 videoView.setDisplayMode(DisplayMode.DISPLAY_MODE_ASPECT_FILL);
@@ -262,7 +264,7 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
         super.onDestroy();
         cleanUp();
         mPlayListenerForSync = null;
-        FeedShareRtcManager.getInstance().removeSyncHandler(mVideoSyncHandler);
+        FeedShareRTCManager.getInstance().removeSyncHandler(mVideoSyncHandler);
         mVideoSyncHandler = null;
         SolutionDemoEventManager.unregister(this);
     }
@@ -336,8 +338,8 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
     }
 
     private void requestVideoList() {
-        FeedShareRTMClient rtmClient = FeedShareRtcManager.getInstance().getRTMClient();
-        if (rtmClient == null){
+        FeedShareRTSClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
+        if (rtmClient == null) {
             return;
         }
         rtmClient.getContentList(new IRequestCallback<VideoResponse>() {
@@ -424,6 +426,16 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
             Log.e(TAG, "scrollToRightPosition targetPosition:" + targetPosition + ",curPosition:" + curPosition + ",scrolledPosition:" + position);
             onPageSelected(position, itemView);
         }
+    }
+
+    public void setMixAudioGain(@IntRange(from = 0, to = 200) int value) {
+        final VideoController videoController = mCurrentVideoView == null ? null : mCurrentVideoView.getVideoController();
+        if (videoController == null) {
+            return;
+        }
+
+        VOLCVideoController controller = ((VOLCVideoController) videoController);
+        controller.setMixAudioGain(value);
     }
 
     /**

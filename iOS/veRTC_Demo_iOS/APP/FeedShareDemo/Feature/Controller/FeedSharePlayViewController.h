@@ -2,8 +2,8 @@
 //  FeedSharePlayViewController.h
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/6.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/6.
+//  
 //
 
 #import <UIKit/UIKit.h>
@@ -20,6 +20,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)popToCreateRoomViewController;
 - (void)popToRoomViewController;
+
+- (void)destroy;
 
 
 @end

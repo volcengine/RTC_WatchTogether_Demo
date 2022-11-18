@@ -38,7 +38,7 @@
 
 ### 步骤 4：构建工程
 
-1. 打开终端窗口，进入 `RTC_Feedshare_Demo-master/iOS/veRTC_Demo_iOS` 根目录
+1. 打开终端窗口，进入 `FeedshareDemo/iOS/veRTC_Demo_iOS` 根目录
 	
 
 <img src="https://lf3-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_c62f65eae748ffbe919548b1a392424d" width="500px" >
@@ -48,7 +48,7 @@
 
 <img src="https://lf6-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_74efd4057f0bbd5530e88f042794919d" width="500px" >
 
-3. 进入 `RTC_Feedshare_Demo-master/iOS/veRTC_Demo_iOS` 根目录，使用 Xcode 打开 `veRTC_Demo.xcworkspace`
+3. 进入 `FeedshareDemo/iOS/veRTC_Demo_iOS` 根目录，使用 Xcode 打开 `veRTC_Demo.xcworkspace`
 	
 
 <img src="https://lf3-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_eb7482010702eeaefdb73e8f6d8eca8c" width="500px" >
@@ -61,16 +61,16 @@
 5. 填写 **LoginUrl**
 	
 
-当前你可以使用 **`http://rtc-test.bytedance.com/rtc_demo_special/login`** 作为测试服务器域名，仅提供跑通测试服务，无法保障正式需求。
+当前你可以使用 **`https://common.rtc.volcvideo.com/rtc_demo_special/login`** 作为测试服务器域名，仅提供跑通测试服务，无法保障正式需求。
 
 <img src="https://lf3-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_9bc1de9e70cfff092955c291750111cc" width="500px" >
 
 6. **填写 APPID、APPKey、AccessKeyID 和 SecretAccessKey**
 	
 
-使用在控制台获取的 **APPID、APPKey、AccessKeyID 和 SecretAccessKey** 填写到 `BuildConfig.h`文件的对应位置**。** 
+使用在控制台获取的 **APPID、APPKey、AccessKeyID 和 SecretAccessKey** 填写到 `BuildConfig.h`文件的对应位置。
 
-<img src="https://lf6-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_3067e73eb3569f78d58e609f4f95435c" width="500px" >
+<img src="https://portal.volccdn.com/obj/volcfe/cloud-universal-doc/upload_e9665368cc183d68c919eb3001de0263.png" width="500px" >
 
 7. 填写 **Partner** 和 **Category**
 	
@@ -106,7 +106,7 @@
 
 <img src="https://lf6-volc-editor.volccdn.com/obj/volcfe/sop-public/upload_9e8c2433636e1e542fd6dde26cb082bf" width="500px" >
 
-3.3 **修改 Bundle** **Identifier****。** 
+3.3 **修改 Bundle** **Identifier**。
 
 默认的 `vertc.veRTCDemo.ios` 已被注册， 将其修改为其他 Bundle ID，格式为 `vertc.xxx`。
 

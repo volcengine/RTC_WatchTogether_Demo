@@ -10,7 +10,8 @@ public class VeRTCApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        SPUtils.initSP(this, "meeting_sp");
+        SPUtils.initSP(this, "ve_rtc_application_sp");
         Utilities.initApp(this);
+        new CrashHandler(this);
     }
 }

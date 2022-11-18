@@ -1,13 +1,14 @@
 //
-//  FeedShareControlComponments.m
+//  FeedShareControlComponents.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/4/7.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/4/7.
+//  
 //
 
 #import "FeedShareRTMManager.h"
 #import "FeedShareRTCManager.h"
+#import "JoinRTSParams.h"
 
 @implementation FeedShareRTMManager
 
@@ -15,9 +16,9 @@
                             block:(void(^)(FeedShareRoomModel *roomModel, RTMACKModel *model))block {
     NSDictionary *dic = @{
         @"room_id" : roomID,
-        @"user_name" : [LocalUserComponents userModel].name,
+        @"user_name" : [LocalUserComponent userModel].name,
     };
-    dic = [PublicParameterCompoments addTokenToParams:dic];
+    dic = [JoinRTSParams addTokenToParams:dic];
     
     [[FeedShareRTCManager shareRtc] emitWithAck:@"twJoinRoom"
                                            with:dic
@@ -44,7 +45,7 @@
         @"os_version" : [UIDevice currentDevice].systemVersion,
         @"client_version" : [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"],
     };
-    dic = [PublicParameterCompoments addTokenToParams:dic];
+    dic = [JoinRTSParams addTokenToParams:dic];
     
     [[FeedShareRTCManager shareRtc] emitWithAck:@"twGetContentList"
                                            with:dic
@@ -65,7 +66,7 @@
     NSDictionary *dic = @{
         @"room_id" : roomID
     };
-    dic = [PublicParameterCompoments addTokenToParams:dic];
+    dic = [JoinRTSParams addTokenToParams:dic];
     
     [[FeedShareRTCManager shareRtc] emitWithAck:@"twLeaveRoom"
                                            with:dic
@@ -84,7 +85,7 @@
         @"room_id" : roomID,
         @"room_scene" : @(roomStatus)
     };
-    dic = [PublicParameterCompoments addTokenToParams:dic];
+    dic = [JoinRTSParams addTokenToParams:dic];
     
     [[FeedShareRTCManager shareRtc] emitWithAck:@"twUpdateRoomScene"
                                            with:dic
@@ -97,7 +98,7 @@
 }
 
 + (void)clearUser:(void (^)(RTMACKModel *model))block {
-    NSDictionary *dic = [PublicParameterCompoments addTokenToParams:nil];
+    NSDictionary *dic = [JoinRTSParams addTokenToParams:nil];
     
     [[FeedShareRTCManager shareRtc] emitWithAck:@"twClearUser" with:dic block:^(RTMACKModel * _Nonnull ackModel) {
         

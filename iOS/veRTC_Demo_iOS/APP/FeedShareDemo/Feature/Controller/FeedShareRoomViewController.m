@@ -2,8 +2,8 @@
 //  FeedShareChatRoomViewController.m
 //  veRTC_Demo
 //
-//  Created by bytedance on 2022/1/5.
-//  Copyright © 2022 bytedance. All rights reserved.
+//  Created by on 2022/1/5.
+//  
 //
 
 #import "FeedShareRoomViewController.h"
@@ -29,19 +29,30 @@
 @property (nonatomic, strong) FeedShareNavView *navView;
 @property (nonatomic, strong) FeedShareBottomButtonsView *buttonsView;
 
-@property (nonatomic, strong) BytedEffectProtocol *beautyCompoments;
+@property (nonatomic, strong) BytedEffectProtocol *beautyComponent;
 @property (nonatomic, strong) FeedShareMessageComponent *messageComponent;
 
 @end
 
 @implementation FeedShareRoomViewController
 
+- (void)dealloc {
+    [UIApplication sharedApplication].idleTimerDisabled = NO;
+}
+
 - (instancetype)initWithRoomModel:(FeedShareRoomModel *)roomModel {
-    if (self = [super init]) {   
+    if (self = [super init]) {
         self.roomModel = roomModel;
-        [[FeedShareRTCManager shareRtc] bingCanvasViewToUid:[LocalUserComponents userModel].uid];
+        [[FeedShareRTCManager shareRtc] bingCanvasViewToUid:[LocalUserComponent userModel].uid];
+        
+        [UIApplication sharedApplication].idleTimerDisabled = YES;
         
         [self addSocketListener];
+        
+        __weak typeof(self) weakSelf = self;
+        [FeedShareRTCManager shareRtc].rtcSameUserJoinRoomBlock = ^(NSString * _Nonnull roomId, NSInteger errorCode) {
+            [weakSelf sameUserJoinRoomLeave];
+        };
     }
     return self;
 }
@@ -52,7 +63,7 @@
     [self setupViews];
     
     // resume local render effect
-    [self.beautyCompoments resumeLocalEffect];
+    [self.beautyComponent resumeLocalEffect];
     
     if ([self isHost]) {
         [self requestVideoListComplete:nil];
@@ -131,11 +142,11 @@
             break;
             
         case FeedShareButtonTypeBeauty: {
-            if (self.beautyCompoments) {
-                [self.beautyCompoments showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
+            if (self.beautyComponent) {
+                [self.beautyComponent showWithType:EffectBeautyRoleTypeHost fromSuperView:self.view dismissBlock:^(BOOL result) {
                 }];
             } else {
-                [[ToastComponents shareToastComponents] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
+                [[ToastComponent shareToastComponent] showWithMessage:@"开源代码暂不支持美颜相关功能，体验效果请下载Demo"];
             }
         }
             break;
@@ -144,6 +155,7 @@
             if ([self isHost]) {
                 [self startFeedShare];
             } else {
+                self.buttonsView.isLoading = YES;
                 [self.messageComponent sendRequestFeedShareMessage:self.roomModel.hostUid];
             }
         }
@@ -175,29 +187,33 @@
     }];
 }
 
-- (void)requestVideoListComplete:(void(^)(BOOL result))complete {
+- (void)requestVideoListComplete:(void(^)(RTMACKModel *model))complete {
     __weak typeof(self) weakSelf = self;
     [FeedShareRTMManager requestVideoListWithRoomID:self.roomModel.roomID block:^(NSArray<FeedShareVideoModel *> * _Nonnull videoList, RTMACKModel * _Nonnull model) {
         if (!model.result) {
-            [[ToastComponents shareToastComponents] showWithMessage:model.message];
+            [[ToastComponent shareToastComponent] showWithMessage:model.message];
         } else {
             weakSelf.videoModelArray = videoList;
         }
         if (complete) {
-            complete(model.result);
+            complete(model);
         }
     }];
 }
 
 - (void)startFeedShare {
     self.buttonsView.userInteractionEnabled = NO;
+    self.buttonsView.isLoading = YES;
     if (self.videoModelArray.count == 0) {
         __weak typeof(self) weakSelf = self;
-        [self requestVideoListComplete:^(BOOL result) {
-            if (result) {
+        [self requestVideoListComplete:^(RTMACKModel *model) {
+            if (model.result) {
                 [weakSelf requestChangeRoomStatus];
+            } else {
+                [[ToastComponent shareToastComponent] showWithMessage:model.message];
+                weakSelf.buttonsView.userInteractionEnabled = YES;
+                weakSelf.buttonsView.isLoading = NO;
             }
-            weakSelf.buttonsView.userInteractionEnabled = YES;
         }];
     } else {
         [self requestChangeRoomStatus];
@@ -210,17 +226,18 @@
     __weak typeof(self) weakSelf = self;
     [FeedShareRTMManager requestChangeRoomScene:FeedShareRoomStatusShare roomID:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
         if (!model.result) {
-            [[ToastComponents shareToastComponents] showWithMessage:model.message];
+            [[ToastComponent shareToastComponent] showWithMessage:model.message];
         } else {
             weakSelf.roomModel.roomStatus = FeedShareRoomStatusShare;
             [weakSelf pushPlayViewController];
         }
         weakSelf.buttonsView.userInteractionEnabled = YES;
+        weakSelf.buttonsView.isLoading = NO;
     }];
 }
 
 - (BOOL)isHost {
-    return [self.roomModel.hostUid isEqual:[LocalUserComponents userModel].uid];
+    return [self.roomModel.hostUid isEqual:[LocalUserComponent userModel].uid];
 }
 
 - (void)receivedVideoList:(NSArray<FeedShareVideoModel *> *)videoList {
@@ -236,20 +253,28 @@
     }
 }
 
-- (void)receiveUpdateRoomScene:(NSString *)roomID scene:(FeedShareRoomStatus)scene {
+- (void)receiveUpdateRoomScene:(NSString *)roomID
+                         scene:(FeedShareRoomStatus)scene {
     if ([self isHost]) {
         return;
     }
     
     NSLog(@"receiveUpdateRoomScene");
     self.roomModel.roomStatus = scene;
-    if (self.playController && scene == FeedShareRoomStatusChat) {
-        [self.playController popToRoomViewController];
-        self.playController = nil;
-    }
-    
-    if (scene == FeedShareRoomStatusShare && self.videoModelArray.count > 0) {
-        [self pushPlayViewController];
+    if (scene == FeedShareRoomStatusChat) {
+        // Pop
+        if (self.playController) {
+            [self.playController popToRoomViewController];
+            self.playController = nil;
+        }
+    } else if (scene == FeedShareRoomStatusShare) {
+        // Push
+        if (self.videoModelArray.count > 0) {
+            [self pushPlayViewController];
+        }
+        self.buttonsView.isLoading = NO;
+    } else {
+        // error
     }
 }
 
@@ -274,16 +299,29 @@
     
     if (![self isHost]) {
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [[ToastComponents shareToastComponents] showWithMessage:@"房主已关闭房间"];
+            [[ToastComponent shareToastComponent] showWithMessage:@"房主已关闭房间"];
         });
     }
+}
+
+/// 相同用户加入被踢离房
+- (void)sameUserJoinRoomLeave {
+    
+    if (self.playController) {
+        [self.playController destroy];
+    }
+    [self.navigationController popToRootViewControllerAnimated:YES];
+    
+    [[FeedShareRTCManager shareRtc].streamViewDic removeAllObjects];
+    
+    [[ToastComponent shareToastComponent] showWithMessage:@"相同ID用户已登录，您已被强制下线" delay:0.8];
 }
 
 #pragma mark - actions
 - (void)leaveButtonClick {
     [FeedShareRTMManager requestLeaveRoom:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
         if (!model.result) {
-            [[ToastComponents shareToastComponents] showWithMessage:model.message];
+            [[ToastComponent shareToastComponent] showWithMessage:model.message];
         }
     }];
     [self quitRoom];
@@ -305,11 +343,11 @@
 
 
 
-- (BytedEffectProtocol *)beautyCompoments {
-    if (!_beautyCompoments) {
-        _beautyCompoments = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
+- (BytedEffectProtocol *)beautyComponent {
+    if (!_beautyComponent) {
+        _beautyComponent = [[BytedEffectProtocol alloc] initWithRTCEngineKit:[FeedShareRTCManager shareRtc].rtcEngineKit];
     }
-    return _beautyCompoments;
+    return _beautyComponent;
 }
 
 - (FeedShareBottomButtonsView *)buttonsView {
