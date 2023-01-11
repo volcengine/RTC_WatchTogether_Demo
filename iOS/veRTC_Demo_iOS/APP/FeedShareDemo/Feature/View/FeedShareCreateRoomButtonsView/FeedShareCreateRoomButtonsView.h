@@ -2,7 +2,7 @@
 //  FeedShareCreateRoomButtonsView.h
 //  FeedShareDemo
 //
-//  Created by bytedance on 2022/10/14.
+//  Created by   on 2022/10/14.
 //
 
 #import <UIKit/UIKit.h>

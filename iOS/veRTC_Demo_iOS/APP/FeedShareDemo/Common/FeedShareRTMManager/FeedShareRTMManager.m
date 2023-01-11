@@ -109,6 +109,16 @@
     }];
 }
 
++ (void)reconnect:(void (^)(RTMACKModel *model))block {
+    NSDictionary *dic = [JoinRTSParams addTokenToParams:nil];
+    
+    [[FeedShareRTCManager shareRtc] emitWithAck:@"twReconnect" with:dic block:^(RTMACKModel * _Nonnull ackModel) {
+        if (block) {
+            block(ackModel);
+        }
+    }];
+}
+
 #pragma mark - Notification Message
 + (void)onUserJoinWithBlock:(void(^)(NSString *roomID, NSString *userID, NSString *userName))block {
     

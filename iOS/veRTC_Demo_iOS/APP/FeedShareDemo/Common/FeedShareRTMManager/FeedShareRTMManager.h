@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 /// @param block Callback
 + (void)clearUser:(void (^)(RTMACKModel *model))block;
 
++ (void)reconnect:(void (^)(RTMACKModel *model))block;
+
 #pragma mark - Notification Message
 
 + (void)onUserJoinWithBlock:(void(^)(NSString *roomID, NSString *userID, NSString *userName))block;

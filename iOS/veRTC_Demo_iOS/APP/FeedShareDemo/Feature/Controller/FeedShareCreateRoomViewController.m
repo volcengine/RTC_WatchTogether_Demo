@@ -104,17 +104,17 @@ FeedShareCreateRoomButtonsViewDelegate
 
 - (void)viewDidLoad {
     [super viewDidLoad];
-    self.view.backgroundColor = [UIColor grayColor];
-    
-    [self initUIComponent];
-    
-    [self.beautyComponent resumeLocalEffect];
-    
+    self.view.backgroundColor = [UIColor colorFromRGBHexString:@"#0D0E12"];
+
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardDidShow:) name:UIKeyboardWillShowNotification object:nil];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(keyBoardDidHide:) name:UIKeyboardWillHideNotification object:nil];
     
+    [self initUIComponent];
+    [self.beautyComponent resumeLocalEffect];
+    
     [[FeedShareRTCManager shareRtc] enableLocalVideo:YES];
     [[FeedShareRTCManager shareRtc] enableLocalAudio:YES];
+    [self loadDataWithClearUser];
 }
 
 - (void)viewWillAppear:(BOOL)animated {
@@ -179,24 +179,22 @@ FeedShareCreateRoomButtonsViewDelegate
     [[ToastComponent shareToastComponent] showLoading];
     
     __weak typeof(self) weakSelf = self;
-    [FeedShareRTMManager clearUser:^(RTMACKModel * _Nonnull model) {
-        [FeedShareRTMManager requestJoinRoomWithRoomID:roomID block:^(FeedShareRoomModel * _Nonnull roomModel, RTMACKModel * _Nonnull model) {
-            
-            if (model.result) {
-                [weakSelf jumpToRoomViewController:roomModel];
-            }
-            else if (model.code == 414) {
-                [[ToastComponent shareToastComponent] showWithMessage:@"该用户已存在房间中"];
-            }
-            else if (model.code == 507) {
-                [[ToastComponent shareToastComponent] showWithMessage:@"房间人数已满"];
-            }
-            else {
-                [[ToastComponent shareToastComponent] showWithMessage:model.message];
-            }
+    [FeedShareRTMManager requestJoinRoomWithRoomID:roomID block:^(FeedShareRoomModel * _Nonnull roomModel, RTMACKModel * _Nonnull model) {
+        
+        if (model.result) {
+            [weakSelf jumpToRoomViewController:roomModel];
+        }
+        else if (model.code == 414) {
+            [[ToastComponent shareToastComponent] showWithMessage:@"该用户已存在房间中"];
+        }
+        else if (model.code == 507) {
+            [[ToastComponent shareToastComponent] showWithMessage:@"房间人数已满"];
+        }
+        else {
+            [[ToastComponent shareToastComponent] showWithMessage:model.message];
+        }
 
-            [[ToastComponent shareToastComponent] dismiss];
-        }];
+        [[ToastComponent shareToastComponent] dismiss];
     }];
     
 }
@@ -426,6 +424,12 @@ FeedShareCreateRoomButtonsViewDelegate
     [[FeedShareRTCManager shareRtc] disconnect];
 }
 
+- (void)loadDataWithClearUser {
+    [FeedShareRTMManager clearUser:^(RTMACKModel * _Nonnull model) {
+        
+    }];
+}
+
 #pragma mark - getter
 
 - (UIView *)roomTextView {
@@ -505,7 +509,7 @@ FeedShareCreateRoomButtonsViewDelegate
 - (UIImageView *)emptImageView {
     if (!_emptImageView) {
         _emptImageView = [[UIImageView alloc] init];
-        _emptImageView.image = [UIImage imageNamed:@"meeting_login_empt" bundleName:HomeBundleName];
+        _emptImageView.image = [UIImage imageNamed:@"login_empt" bundleName:HomeBundleName];
         _emptImageView.hidden = YES;
     }
     return _emptImageView;

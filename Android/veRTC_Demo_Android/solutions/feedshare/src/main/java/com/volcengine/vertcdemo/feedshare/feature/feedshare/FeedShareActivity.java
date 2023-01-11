@@ -155,7 +155,7 @@ public class FeedShareActivity extends BaseActivity {
 
         TextView roomIDTV = findViewById(R.id.room_id_tv);
         // todo 隔离临时方案
-        roomIDTV.setText(String.format("RoomID:%s", FeedShareDataManger.getInstance().getRoomId().replace("feed_", "")));
+        roomIDTV.setText(String.format("房间ID:%s", FeedShareDataManger.getInstance().getRoomId().replace("feed_", "")));
 
         micCameraSwitchHelper = new MicCameraSwitchHelper();
         micCameraSwitchHelper.setEngine(getEngine());
@@ -374,7 +374,7 @@ public class FeedShareActivity extends BaseActivity {
         setLocalRenderView();
         if (mRemoteUserIds != null && mRemoteUserIds.size() > 0) {
             for (int i = 0; i < Math.min(mRemoteUserIds.size(), 2); i++) {
-                setRemoteView(mRemoteUserIds.get(i), i);
+                setRemoteView(mRemoteUserIds.get(i));
             }
         }
 
@@ -416,7 +416,7 @@ public class FeedShareActivity extends BaseActivity {
     }
 
     /***设置远端用户视频渲染*/
-    private void setRemoteView(String userId, int index) {
+    private void setRemoteView(String userId) {
         if (TextUtils.isEmpty(userId)) return;
         int curScene = FeedShareDataManger.getInstance().getCurScene();
         FrameLayout remoteContainer1 = curScene == JoinRoomResponse.FEED_SHARE_ROOM_SCENE_FEED_SHARE
@@ -427,9 +427,9 @@ public class FeedShareActivity extends BaseActivity {
                 : mChatRemoteContainer2;
 
         FrameLayout remoteContainer;
-        if (index == 0) {
+        if (remoteContainer1.getChildCount() == 0) {
             remoteContainer = remoteContainer1;
-        } else if (index == 1) {
+        } else if (remoteContainer2.getChildCount() == 0) {
             remoteContainer = remoteContainer2;
         } else {
             return;
@@ -563,7 +563,7 @@ public class FeedShareActivity extends BaseActivity {
             mRemoteUserIds = new ArrayList<>(1);
         }
         mRemoteUserIds.add(userJoinEvent.userId);
-        setRemoteView(userJoinEvent.userId, mRemoteUserIds.size() - 1);
+        setRemoteView(userJoinEvent.userId);
     }
 
     /**

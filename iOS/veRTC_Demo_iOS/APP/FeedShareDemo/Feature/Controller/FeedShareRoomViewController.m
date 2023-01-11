@@ -13,7 +13,6 @@
 #import "FeedShareBottomButtonsView.h"
 #import "FeedShareNavView.h"
 
-
 #import "FeedShareRTCManager.h"
 #import "SystemAuthority.h"
 #import "FeedShareMessageComponent.h"
@@ -37,6 +36,10 @@
 @implementation FeedShareRoomViewController
 
 - (void)dealloc {
+    if (self.playController) {
+        [self.playController destroy];
+    }
+    [[FeedShareRTCManager shareRtc].streamViewDic removeAllObjects];
     [UIApplication sharedApplication].idleTimerDisabled = NO;
 }
 
@@ -50,9 +53,13 @@
         [self addSocketListener];
         
         __weak typeof(self) weakSelf = self;
-        [FeedShareRTCManager shareRtc].rtcSameUserJoinRoomBlock = ^(NSString * _Nonnull roomId, NSInteger errorCode) {
-            [weakSelf sameUserJoinRoomLeave];
+        [FeedShareRTCManager shareRtc].rtcJoinRoomBlock = ^(NSString * _Nonnull roomId, NSInteger errorCode, NSInteger joinType) {
+            if (errorCode == 0 && joinType == 1) {
+                // 重新登录
+                [weakSelf loadDataWithReconnect];
+            }
         };
+        
     }
     return self;
 }
@@ -290,7 +297,6 @@
     if ([self isHost]) {
         return;
     }
-    NSLog(@"receiveUpdateRoomSceneFinish");
     if (self.playController) {
         [self.playController popToCreateRoomViewController];
     } else {
@@ -304,17 +310,20 @@
     }
 }
 
-/// 相同用户加入被踢离房
-- (void)sameUserJoinRoomLeave {
-    
-    if (self.playController) {
-        [self.playController destroy];
-    }
-    [self.navigationController popToRootViewControllerAnimated:YES];
-    
-    [[FeedShareRTCManager shareRtc].streamViewDic removeAllObjects];
-    
-    [[ToastComponent shareToastComponent] showWithMessage:@"相同ID用户已登录，您已被强制下线" delay:0.8];
+- (void)loadDataWithReconnect {
+    __weak __typeof(self) wself = self;
+    [FeedShareRTMManager reconnect:^(RTMACKModel * _Nonnull model) {
+        if (model.code == RTMStatusCodeUserIsInactive ||
+            model.code == RTMStatusCodeRoomDisbanded ||
+            model.code == RTMStatusCodeUserNotFound) {
+            if (wself.playController) {
+                [wself.playController popToCreateRoomViewController];
+            } else {
+                [wself quitRoom];
+            }
+            [[ToastComponent shareToastComponent] showWithMessage:model.message delay:0.8];
+        }
+    }];
 }
 
 #pragma mark - actions

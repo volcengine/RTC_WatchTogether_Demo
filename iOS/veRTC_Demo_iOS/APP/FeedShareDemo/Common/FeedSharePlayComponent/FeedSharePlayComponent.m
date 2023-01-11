@@ -292,16 +292,25 @@
     
     // 比主播快, 考虑到主播重播时嘉宾还在结尾
     if (videoUpdate.currentDuration - player.currentDuration > 2 || (videoUpdate.currentDuration > 4 && player.currentDuration - videoUpdate.currentDuration > 2)) {
+        __weak typeof(self) weakSelf = self;
         [player setCurrentPlaybackTime:videoUpdate.currentDuration complete:^{
             
+            if (videoUpdate.videoStatus == FeedShareVideoStatusPause && ![self.currentPlayCell.player isPaused]) {
+                [weakSelf.currentPlayCell pause];
+            } else if (videoUpdate.videoStatus == FeedShareVideoStatusPlay && ![weakSelf.currentPlayCell.player isPlaying]) {
+                [weakSelf.currentPlayCell play];
+            }
         }];
     }
-    
-    if (videoUpdate.videoStatus == FeedShareVideoStatusPause && ![self.currentPlayCell.player isPaused]) {
-        [self.currentPlayCell pause];
-    } else if (videoUpdate.videoStatus == FeedShareVideoStatusPlay && ![self.currentPlayCell.player isPlaying]) {
-        [self.currentPlayCell play];
+    else {
+        if (videoUpdate.videoStatus == FeedShareVideoStatusPause && ![self.currentPlayCell.player isPaused]) {
+            [self.currentPlayCell pause];
+        } else if (videoUpdate.videoStatus == FeedShareVideoStatusPlay && ![self.currentPlayCell.player isPlaying]) {
+            [self.currentPlayCell play];
+        }
     }
+    
+    
 }
 
 - (void)loadMoreData {

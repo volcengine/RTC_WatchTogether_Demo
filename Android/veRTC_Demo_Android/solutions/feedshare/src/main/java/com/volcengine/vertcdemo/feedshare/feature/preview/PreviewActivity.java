@@ -40,6 +40,7 @@ import com.volcengine.vertcdemo.core.SolutionDataManager;
 import com.volcengine.vertcdemo.core.net.rts.RTSBaseClient;
 import com.volcengine.vertcdemo.core.net.rts.RTSInfo;
 import com.volcengine.vertcdemo.feedshare.R;
+import com.volcengine.vertcdemo.feedshare.bean.DeviceStatusRecord;
 import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
 import com.volcengine.vertcdemo.feedshare.core.FeedShareRTCManager;
 import com.volcengine.vertcdemo.feedshare.core.FeedShareRTSClient;
@@ -59,6 +60,8 @@ public class PreviewActivity extends BaseActivity {
     private static final String TAG = "[TW]PreviewActivity";
     public static final String ROOM_INPUT_REGEX = "^[a-zA-Z0-9@_-]+$";
     public static final String SCENE_NAME = "tw";
+
+    public static final String ROOM_ID_PREFIX = "feed_";
 
     private boolean mRoomIdOverflow = false;
     private View mRootView;
@@ -121,6 +124,7 @@ public class PreviewActivity extends BaseActivity {
             micCameraSwitchHelper.setEngine(mRtcEngine);
             micCameraSwitchHelper.updateMicAndCameraUI();
             micCameraSwitchHelper.updateRtcAudioAndVideoCapture();
+            updateVideoView();
         }
     }
 
@@ -167,7 +171,7 @@ public class PreviewActivity extends BaseActivity {
                 return;
             }
             String roomId = getRoomId();
-            if (TextUtils.isEmpty(roomId)) {
+            if (TextUtils.equals(ROOM_ID_PREFIX, roomId)) {
                 SafeToast.show(this, "房间号不能为空", Toast.LENGTH_SHORT);
                 return;
             }
@@ -178,6 +182,7 @@ public class PreviewActivity extends BaseActivity {
             if (micCameraSwitchHelper != null) {
                 micCameraSwitchHelper.toggleCamera();
             }
+            updateVideoView();
         }));
         mMicSwitch.setOnClickListener(DebounceClickListener.create(v -> {
             if (micCameraSwitchHelper != null) {
@@ -204,9 +209,6 @@ public class PreviewActivity extends BaseActivity {
         videoCanvas.isScreen = false;
         videoCanvas.renderMode = VideoCanvas.RENDER_MODE_HIDDEN;
         String selfUid = SolutionDataManager.ins().getUserId();
-        if (TextUtils.isEmpty(selfUid)) {
-            return;
-        }
         TextureView renderView = FeedShareDataManger.getInstance().getUserRenderView(selfUid);
         videoCanvas.renderView = renderView;
         FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
@@ -214,7 +216,6 @@ public class PreviewActivity extends BaseActivity {
                 ViewGroup.LayoutParams.MATCH_PARENT);
         Utils.attachViewToViewGroup(mPreviewContainer, renderView, params);
         mPreviewContainer.setVisibility(View.VISIBLE);
-        mRtcEngine.setLocalVideoCanvas(StreamIndex.STREAM_INDEX_MAIN, null);
         mRtcEngine.setLocalVideoCanvas(StreamIndex.STREAM_INDEX_MAIN, videoCanvas);
     }
 
@@ -228,15 +229,12 @@ public class PreviewActivity extends BaseActivity {
         if (mRtcEngine != null) {
             mRtcEngine.setLocalVideoMirrorType(MirrorType.MIRROR_TYPE_RENDER_AND_ENCODER);
             mRtcEngine.switchCamera(CameraId.CAMERA_ID_FRONT);
-            int childCount = mPreviewContainer.getChildCount();
-            if (childCount == 0) {
-                setLocalRenderView();
-            }
         }
         if (micCameraSwitchHelper != null) {
             micCameraSwitchHelper.updateMicAndCameraUI();
             micCameraSwitchHelper.updateRtcAudioAndVideoCapture();
         }
+        updateVideoView();
     }
 
     @Override
@@ -292,8 +290,18 @@ public class PreviewActivity extends BaseActivity {
     }
 
     public String getRoomId() {
-        // todo 隔离临时方案
-        return "feed_" + mRoomIdEt.getText().toString().trim();
+        return ROOM_ID_PREFIX + mRoomIdEt.getText().toString().trim();
+    }
+
+    /**
+     * 根据用户视频采集状态更新视图
+     */
+    private void updateVideoView() {
+        if (DeviceStatusRecord.device.isCameraOn()) {
+            setLocalRenderView();
+        } else {
+            mPreviewContainer.removeAllViews();
+        }
     }
 
     @Override
