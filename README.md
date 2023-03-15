@@ -1,7 +1,7 @@
 ## 目录结构
 
 ```
-RTC_KTV_Demo
+RTC_WatchTogether_Demo
 ├─ Android        // Android 端开源代码和跑通 Readme 
 ├─ iOS        // iOS 端开源代码和跑通 Readme 
 └─ Readme // 场景介绍
