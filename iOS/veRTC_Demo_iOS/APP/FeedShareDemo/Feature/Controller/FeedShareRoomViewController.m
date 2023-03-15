@@ -31,6 +31,8 @@
 @property (nonatomic, strong) BytedEffectProtocol *beautyComponent;
 @property (nonatomic, strong) FeedShareMessageComponent *messageComponent;
 
+@property (nonatomic, assign) BOOL isActivelyQuit;
+
 @end
 
 @implementation FeedShareRoomViewController
@@ -294,7 +296,7 @@
 }
 
 - (void)receiveFinishRoom:(NSString *)roomID {
-    if ([self isHost]) {
+    if (self.isActivelyQuit) {
         return;
     }
     if (self.playController) {
@@ -328,6 +330,7 @@
 
 #pragma mark - actions
 - (void)leaveButtonClick {
+    self.isActivelyQuit = YES;
     [FeedShareRTMManager requestLeaveRoom:self.roomModel.roomID block:^(RTMACKModel * _Nonnull model) {
         if (!model.result) {
             [[ToastComponent shareToastComponent] showWithMessage:model.message];
