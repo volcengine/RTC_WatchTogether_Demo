@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="scene_feed_share">一起看抖音</string>
+    <string name="login_input_feed_share_id_waring">输入长度不能超过18位</string>
+    <string name="login_limited_service">本产品仅用于功能体验，单次会议时长不超过20分钟</string>
+    <string name="login_input_wrong_content_waring">请输入数字、英文字母或符号@_-</string>
+    <string name="login_input_id_hint">请输入房间ID</string>
+    <string name="login_join_room">进入房间</string>
+    <string name="audio_video">视频音量</string>
+    <string name="audio_rtc">通话音量</string>
+    <string name="video_load_fail">视频加载失败</string>
+    <string name="click_to_retry">点击重试</string>
+    <string name="duration_live_has_reached_minutes">本次体验体验已超过20分钟</string>
+</resources>

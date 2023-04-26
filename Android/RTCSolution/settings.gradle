@@ -1,0 +1,9 @@
+include ':app'
+include ':component:ToolKit'
+
+rootProject.name = "veRTC_Demo"
+
+include ':component:LoginKit'
+include ':component:JoinRTSParamsKit'
+
+include ':solutions:feedshare'
