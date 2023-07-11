@@ -7,6 +7,7 @@ import static com.volcengine.vertcdemo.feedshare.bean.JoinRoomResponse.FEED_SHAR
 
 import android.annotation.SuppressLint;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.TextureView;
 
 import androidx.annotation.NonNull;
@@ -20,11 +21,17 @@ import com.volcengine.vertcdemo.utils.AppUtil;
 import java.util.HashMap;
 
 public class FeedShareDataManger {
+
+    public static final int DEFAULT_VIDEO_AUDIO_GAIN = 20;
+    public static final int DEFAULT_RTC_AUDIO_GAIN = 100;
+
     @JoinRoomResponse.ROOM_SCENE
     private int mCurScene;
     private String mRoomId;
     private String mHostUid;
     private HashMap<String, TextureView> mTextures;
+    private int mRTCAudioGain = DEFAULT_RTC_AUDIO_GAIN;
+    private int mVideoAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
 
     private FeedShareDataManger() {
     }
@@ -70,19 +77,15 @@ public class FeedShareDataManger {
 
     public void clear() {
         mCurScene = FEED_SHARE_ROOM_SCENE_CHAT;
-
         DeviceStatusRecord.device.setMicOn();
         DeviceStatusRecord.device.setCameraOn();
-
         FeedShareRTCManager.getInstance().destroyEngine();
-
         mRoomId = null;
         mHostUid = null;
-
         if (mTextures != null) {
             mTextures.clear();
+            mTextures = null;
         }
-        mTextures = null;
     }
 
     public int getCurScene() {
@@ -115,5 +118,21 @@ public class FeedShareDataManger {
 
     public boolean isHost() {
         return TextUtils.equals(SolutionDataManager.ins().getUserId(), mHostUid);
+    }
+
+    public void setRTCAudioGain(int audioGain) {
+        mRTCAudioGain = audioGain;
+    }
+
+    public int getRTCAudioGain() {
+        return mRTCAudioGain;
+    }
+
+    public void setVideoAudioGain(int audioGain) {
+        mVideoAudioGain = audioGain;
+    }
+
+    public int getVideoAudioGain() {
+        return mVideoAudioGain;
     }
 }

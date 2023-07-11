@@ -3,9 +3,6 @@
 
 package com.volcengine.vertcdemo.feedshare.feature.feedshare;
 
-import static com.volcengine.vertcdemo.feedshare.utils.VodAudioProcessor.DEFAULT_RTC_AUDIO_GAIN;
-import static com.volcengine.vertcdemo.feedshare.utils.VodAudioProcessor.DEFAULT_VIDEO_AUDIO_GAIN;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -144,6 +141,7 @@ public class FeedShareActivity extends SolutionBaseActivity {
         super.onDestroy();
         mUserIdContainerMap.clear();
         SolutionDemoEventManager.unregister(this);
+        FeedShareDataManger.getInstance().setRTCAudioGain(FeedShareDataManger.DEFAULT_RTC_AUDIO_GAIN);
         FeedShareRTCManager.getInstance().removeSyncHandler(mRTCMsgSyncHandler);
     }
 
@@ -275,17 +273,16 @@ public class FeedShareActivity extends SolutionBaseActivity {
         FeedShareRTCManager.getInstance().openEffectDialog(this);
     }
 
-    private int mVideoAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
-    private int mRtcAudioGain = DEFAULT_RTC_AUDIO_GAIN;
 
     private RTCVideo getEngine() {
         return FeedShareRTCManager.getInstance().getEngine();
     }
 
     public void openSetting() {
+        FeedShareDataManger dataManger = FeedShareDataManger.getInstance();
         AudioControllerDialog audioDialog = new AudioControllerDialog(this);
-        audioDialog.setVideoDefault(mVideoAudioGain);
-        audioDialog.setRtcDefault(mRtcAudioGain);
+        audioDialog.setVideoDefault(dataManger.getVideoAudioGain());
+        audioDialog.setRtcDefault(dataManger.getRTCAudioGain());
         audioDialog.setAudioChangeListener(new AudioControllerDialog.AudioChangeListener() {
             @Override
             public void onVideoAudioChange(int progress) {
@@ -293,12 +290,12 @@ public class FeedShareActivity extends SolutionBaseActivity {
                 if (engine == null) {
                     return;
                 }
+                dataManger.setVideoAudioGain(progress);
                 mVideosFragment.setMixAudioGain(progress);
             }
 
             @Override
             public void onVideoStopTracking(int progress) {
-                mVideoAudioGain = progress;
             }
 
             @Override
@@ -307,12 +304,12 @@ public class FeedShareActivity extends SolutionBaseActivity {
                 if (engine == null) {
                     return;
                 }
+                dataManger.setRTCAudioGain(progress);
                 engine.setPlaybackVolume(progress);
             }
 
             @Override
             public void onRtcStopTracking(int progress) {
-                mRtcAudioGain = progress;
             }
         });
         audioDialog.show();
@@ -400,7 +397,6 @@ public class FeedShareActivity extends SolutionBaseActivity {
             showVideoFragment();
         } else {
             removeVideoFragment();
-
         }
 
         setRenderViewGroupVisibility(mChatSelfContainer, !isShareScene);
@@ -511,7 +507,6 @@ public class FeedShareActivity extends SolutionBaseActivity {
                 .remove(mVideosFragment)
                 .commitAllowingStateLoss();
         mVideosFragment = null;
-        mVideoAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
     }
 
     /**

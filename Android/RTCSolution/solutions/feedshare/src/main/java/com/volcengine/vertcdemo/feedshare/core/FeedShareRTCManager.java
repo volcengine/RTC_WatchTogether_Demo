@@ -13,6 +13,7 @@ import com.ss.bytertc.engine.RTCRoom;
 import com.ss.bytertc.engine.RTCRoomConfig;
 import com.ss.bytertc.engine.RTCVideo;
 import com.ss.bytertc.engine.UserInfo;
+import com.ss.bytertc.engine.type.AudioScenarioType;
 import com.ss.bytertc.engine.type.ChannelProfile;
 import com.ss.bytertc.engine.type.LocalStreamStats;
 import com.ss.bytertc.engine.type.MessageConfig;
@@ -147,7 +148,8 @@ public class FeedShareRTCManager {
         destroyEngine();
         mRTCVideo = RTCVideo.createRTCVideo(AppUtil.getApplicationContext(), info.appId, mRTCVideoEventHandler, null, null);
         mRTCVideo.setBusinessId(info.appId);
-
+        mRTCVideo.setAudioScenario(AudioScenarioType.AUDIO_SCENARIO_GAME_STREAMING);
+        mRTCVideo.enablePlaybackDucking(true);
         mRTSClient = new FeedShareRTSClient(mRTCVideo, info);
         mRTCVideoEventHandler.setBaseClient(mRTSClient);
         mRTCRoomEventHandler.setBaseClient(mRTSClient);

@@ -84,18 +84,15 @@ public class PreviewActivity extends SolutionBaseActivity {
         }
         FeedShareRTCManager.getInstance().initEngine(rtmInfo);
         RTSBaseClient rtmClient = FeedShareRTCManager.getInstance().getRTMClient();
-        if (rtmClient == null) {
-            return;
-        }
-        rtmClient.login(rtmInfo.rtsToken,
-                (resultCode, message) -> {
-                    if (resultCode == RTSBaseClient.LoginCallBack.SUCCESS) {
-                        Intent intent = new Intent(context, PreviewActivity.class);
-                        context.startActivity(intent);
-                    } else {
-                        SolutionToast.show("Login RTM Fail Error:" + resultCode + ",message:" + message);
-                    }
-                });
+        if (rtmClient == null) return;
+        rtmClient.login(rtmInfo.rtsToken, (resultCode, message) -> {
+            if (resultCode == RTSBaseClient.LoginCallBack.SUCCESS) {
+                Intent intent = new Intent(context, PreviewActivity.class);
+                context.startActivity(intent);
+            } else {
+                SolutionToast.show("Login RTM Fail Error:" + resultCode + ",message:" + message);
+            }
+        });
     }
 
     private final Runnable mRoomIdDismissRunnable = () -> mRoomIdErrorTv.setVisibility(View.GONE);
@@ -188,7 +185,6 @@ public class PreviewActivity extends SolutionBaseActivity {
         }));
         mEffectSetting.setOnClickListener(DebounceClickListener.create(v -> openVideoEffectDialog()));
         mCloseIv.setOnClickListener(DebounceClickListener.create(v -> {
-            FeedShareDataManger.getInstance().clear();
             finish();
         }));
 

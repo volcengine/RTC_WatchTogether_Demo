@@ -3,6 +3,8 @@
 
 package com.volcengine.vertcdemo.feedshare.utils;
 
+import android.util.Log;
+
 import androidx.annotation.IntRange;
 
 import com.ss.bytertc.engine.RTCVideo;
@@ -16,17 +18,12 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class VodAudioProcessor {
-
-    public static final int DEFAULT_VIDEO_AUDIO_GAIN = 20;
-    public static final int DEFAULT_RTC_AUDIO_GAIN = 100;
-
-    @IntRange(from = 0, to = 200)
-    private int mixAudioGain = DEFAULT_VIDEO_AUDIO_GAIN;
+    private volatile int mixAudioGain;
 
     private int mChannelCount;
     private int mSampleRate;
-    private RTCVideo mEngine;
-    private IAudioMixingManager mixAudioManager;
+    private final RTCVideo mEngine;
+    private final IAudioMixingManager mixAudioManager;
     private ByteBuffer mRTCBuffer;
 
     public VodAudioProcessor(RTCVideo engine) {

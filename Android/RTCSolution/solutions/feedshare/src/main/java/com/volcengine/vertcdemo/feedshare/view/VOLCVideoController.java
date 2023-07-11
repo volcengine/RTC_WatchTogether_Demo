@@ -417,18 +417,10 @@ public class VOLCVideoController implements VideoController, VideoInfoListener {
     }
 
     private void onSeekComplete(final boolean success) {
-        Log.d(TAG, "seek_complete:" + (success ? "done" : "fail"));
         for (VideoPlayListener listener : playListeners) {
             if (listener != null) {
                 listener.onVideoSeekComplete(success);
             }
-        }
-    }
-
-    public void setMixAudioGain(@IntRange(from = 0, to = 200) int gain) {
-        final VideoAudioProcessor audioProcessor = mAudioProcessor;
-        if (audioProcessor != null) {
-            audioProcessor.setMixAudioGain(gain);
         }
     }
 }

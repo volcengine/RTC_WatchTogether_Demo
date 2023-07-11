@@ -29,19 +29,15 @@ import com.ss.ttvideoengine.strategy.source.StrategySource;
 import com.volcengine.vertcdemo.core.eventbus.SolutionDemoEventManager;
 import com.volcengine.vertcdemo.core.net.IRequestCallback;
 import com.volcengine.vertcdemo.feedshare.R;
-import com.volcengine.vertcdemo.feedshare.utils.WeakHandler;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRTSClient;
-import com.volcengine.vertcdemo.feedshare.core.FeedShareRTCManager;
-import com.volcengine.vertcdemo.feedshare.view.VideoController;
-import com.volcengine.vertcdemo.feedshare.view.pager.CustomRecyclerView;
-import com.volcengine.vertcdemo.feedshare.view.pager.PagerLayoutManager;
-import com.volcengine.vertcdemo.feedshare.view.pager.RecyclerViewPagerListener;
+import com.volcengine.vertcdemo.feedshare.bean.MessageContent;
 import com.volcengine.vertcdemo.feedshare.bean.VideoItem;
 import com.volcengine.vertcdemo.feedshare.bean.VideoResponse;
-import com.volcengine.vertcdemo.feedshare.event.ContentUpdateInform;
-import com.volcengine.vertcdemo.feedshare.bean.MessageContent;
 import com.volcengine.vertcdemo.feedshare.bean.VideoStatusInfo;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareDataManger;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTCManager;
+import com.volcengine.vertcdemo.feedshare.core.FeedShareRTSClient;
+import com.volcengine.vertcdemo.feedshare.event.ContentUpdateInform;
+import com.volcengine.vertcdemo.feedshare.utils.WeakHandler;
 import com.volcengine.vertcdemo.feedshare.view.DisplayMode;
 import com.volcengine.vertcdemo.feedshare.view.VOLCVideoController;
 import com.volcengine.vertcdemo.feedshare.view.VOLCVideoView;
@@ -52,11 +48,16 @@ import com.volcengine.vertcdemo.feedshare.view.layers.CoverLayer;
 import com.volcengine.vertcdemo.feedshare.view.layers.LoadFailLayer;
 import com.volcengine.vertcdemo.feedshare.view.layers.LoadingLayer;
 import com.volcengine.vertcdemo.feedshare.view.layers.SmallToolbarLayer;
+import com.volcengine.vertcdemo.feedshare.view.pager.CustomRecyclerView;
+import com.volcengine.vertcdemo.feedshare.view.pager.PagerLayoutManager;
+import com.volcengine.vertcdemo.feedshare.view.pager.RecyclerViewPagerListener;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class VideoFragment extends Fragment implements RecyclerViewPagerListener, WeakHandler.IHandler {
@@ -72,6 +73,7 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
     private CustomRecyclerView mRecyclerView;
     private PagerLayoutManager mLayoutManager;
     private long lastProgressSyncTs = -1;
+    private final HashSet<WeakReference<VideoAudioProcessor>> mAudioProcessors = new HashSet<>();
 
     private VideoPlayListener mPlayListenerForSync = new VideoPlayListenerAdapter() {
         @Override
@@ -176,6 +178,8 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
                 VOLCVideoController controller = new VOLCVideoController(videoView.getContext(), data, videoView);
                 controller.addPlayListener(mPlayListenerForSync);
                 VideoAudioProcessor processor = new VideoAudioProcessor(FeedShareRTCManager.getInstance().getEngine());
+                processor.setMixAudioGain(FeedShareDataManger.getInstance().getVideoAudioGain());
+                mAudioProcessors.add(new WeakReference<>(processor));
                 controller.setAudioProcessor(processor);
                 videoView.setVideoController(controller);
                 videoView.setDisplayMode(DisplayMode.DISPLAY_MODE_ASPECT_FILL);
@@ -267,6 +271,7 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
         cleanUp();
         mPlayListenerForSync = null;
         FeedShareRTCManager.getInstance().removeSyncHandler(mVideoSyncHandler);
+        FeedShareDataManger.getInstance().setVideoAudioGain(FeedShareDataManger.DEFAULT_VIDEO_AUDIO_GAIN);
         mVideoSyncHandler = null;
         SolutionDemoEventManager.unregister(this);
     }
@@ -431,13 +436,13 @@ public class VideoFragment extends Fragment implements RecyclerViewPagerListener
     }
 
     public void setMixAudioGain(@IntRange(from = 0, to = 200) int value) {
-        final VideoController videoController = mCurrentVideoView == null ? null : mCurrentVideoView.getVideoController();
-        if (videoController == null) {
-            return;
+        if (mAudioProcessors.size() > 0) {
+            for (WeakReference reference : mAudioProcessors) {
+                Object processor = reference.get();
+                if (processor instanceof VideoAudioProcessor)
+                    ((VideoAudioProcessor) processor).setMixAudioGain(value);
+            }
         }
-
-        VOLCVideoController controller = ((VOLCVideoController) videoController);
-        controller.setMixAudioGain(value);
     }
 
     /**
