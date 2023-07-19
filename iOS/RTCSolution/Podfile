@@ -1,8 +1,7 @@
-source 'https://github.com/CocoaPods/Specs.git'
-source 'https://github.com/volcengine/volcengine-specs.git'
+
 
 # RTC SDK
-pod 'VolcEngineRTC', '3.52.109'
+pod 'VolcEngineRTC', '3.52.109', :source => 'https://github.com/volcengine/volcengine-specs.git'
 
 target 'RTCSolution' do
   platform :ios, '12.0'
@@ -24,6 +23,7 @@ target 'RTCSolution' do
   
   # 一起看
   pod 'FeedShareDemo', :path => '../RTCSolution/APP/FeedShareDemo'
+  pod 'TTSDK/Player-SR', '1.36.2.4-premium', :source => 'https://github.com/volcengine/volcengine-specs.git'
   
 end
 
